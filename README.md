@@ -13,24 +13,26 @@ O **GameReady PC Doctor** é um utilitário portátil de código aberto para Win
 
 ## 🎯 Abas e Recursos
 
-### 1. 💡 Avaliação Individual & Consultor de Upgrades
-* **Classificação de Tier do PC:** Avalia o equilíbrio entre CPU, GPU, RAM e Armazenamento (ex: *Alta Performance Gamer*, *Intermediário Gamer*, *PC Básico / Esports*).
-* **Diagnóstico Personalizado para o Hardware Detectado:**
-  * 🔴 **Prioridade Alta:** Alerta sobre gargalos críticos (ex: RAM em Single-Channel cortando 20-30% de FPS, sistema rodando em HD mecânico, SSD com menos de 15% de espaço livre, ou menos de 16 GB de RAM).
-  * 🟡 **Ajustes Recomendados (Gratuitos):** Orienta a ativação do Resizable BAR na BIOS, perfis XMP/DOCP/EXPO para memórias abaixo da frequência suportada e desativação do Isolamento de Núcleo (VBS) no Windows 11.
-  * 🟢 **Pontos Fortes do Computador:** Destaca os componentes que já estão em estado perfeito, evitando gastos desnecessários com upgrades.
-  * 🔵 **Dicas Técnicas de Longo Prazo:** Alertas sobre largura de banda PCIe (ex: placas x8 rodando em PCIe 3.0 vs 4.0).
-
-### 2. 🚀 Diagnóstico & Otimizações em 1 Clique
+### 1. 🚀 Diagnóstico & Otimizações em 1 Clique
+* **🖥️ Taxa de Atualização do Monitor (Hz):** Identifica a taxa atual e a capacidade máxima do monitor via EDID. Alerta imediatamente se o cliente possui um monitor gamer (144Hz/165Hz/240Hz) travado em 60 Hz no Windows e oferece atalho direto para desbloquear a fluidez total.
+* **🎮 Modo de Jogo (Windows Game Mode):** Garante que o agendador do Windows priorize núcleos e recursos da CPU para os jogos em execução.
 * **🎮 Resizable BAR (ReBAR):** Diagnóstico de VRAM com guia passo a passo para BIOS ASUS, Gigabyte, MSI e ASRock.
 * **🛡️ Isolamento do Núcleo (VBS):** Atalho direto para desativar a virtualização de segurança do Windows 11 e reduzir a latência da CPU.
-* **⚡ Memória RAM:** Verificação de canais (Single vs Dual Channel) e frequências nominais.
+* **⚡ Memória RAM:** Verificação de canais (Single vs Dual Channel) e frequências nominais (XMP/DOCP).
 * **🔋 Plano de Energia:** Ativação instantânea do plano *Desempenho Máximo* (*Ultimate Performance*).
 * **🧹 Limpeza de Shaders & Caches:** Varredura e limpeza segura do cache de shaders da NVIDIA (`DXCache`) e temporários.
 * **🚀 Inicialização Automática:** Atalho rápido para gerenciar os programas do boot.
 
+### 2. 💡 Avaliação Individual & Consultor de Upgrades
+* **Classificação de Tier do PC:** Avalia o equilíbrio entre CPU, GPU, RAM e Armazenamento (ex: *Alta Performance Gamer*, *Intermediário Gamer*, *PC Básico / Esports*).
+* **Diagnóstico Personalizado para o Hardware Detectado:**
+  * 🔴 **Prioridade Alta:** Alerta sobre gargalos críticos (ex: monitor gamer de 144Hz+ travado em 60Hz, RAM em Single-Channel cortando 20-30% de FPS, sistema rodando em HD mecânico, SSD com menos de 15% de espaço livre, ou menos de 16 GB de RAM).
+  * 🟡 **Ajustes Recomendados (Gratuitos):** Orienta a ativação do Resizable BAR na BIOS, perfis XMP/DOCP/EXPO para memórias e desativação do Isolamento de Núcleo (VBS).
+  * 🟢 **Pontos Fortes do Computador:** Destaca os componentes que já estão em estado perfeito (ex: monitor em alta taxa de quadros, SSD NVMe saudável).
+  * 🔵 **Dicas Técnicas de Longo Prazo:** Alertas sobre largura de banda PCIe e upgrades visuais.
+
 ### 3. ✅ Verificador de Sucesso (Validação Pós-Ajustes)
-* **Placar Geral de Otimização (0% a 100%):** Avalia se todas as otimizações recomendadas foram aplicadas.
+* **Placar Geral de Otimização (0% a 100%):** Avalia se as 6 principais áreas de performance foram otimizadas.
 * **Checklist Inteligente:** Crachás visuais verdes (`✅ CONCLUÍDO`) e vermelhos (`⚠️ PENDENTE`).
 
 ---
@@ -44,13 +46,6 @@ Não requer instalação de Python, Node.js ou bibliotecas extras:
    👉 **`Iniciar_Otimizador.bat`**
 3. Confirme a permissão de Administrador (UAC).
 4. O aplicativo abrirá com interface moderna nativa em Dark Mode.
-
----
-
-## 🛠️ Tecnologias Utilizadas
-* **Windows Presentation Foundation (WPF / XAML):** Interface gráfica nativa de alta velocidade e design moderno.
-* **PowerShell 5.1 / 7+:** Coleta dinâmica via WMI/CIM e chamadas ao sistema.
-* **NVIDIA System Management Interface (`nvidia-smi`):** Leitura de barramento PCIe e mapeamento de VRAM.
 
 ---
 

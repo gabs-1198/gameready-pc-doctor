@@ -107,6 +107,7 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, Sys
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -170,7 +171,7 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, Sys
                         </Border>
 
                         <!-- Card 5: Limpeza de Shaders e Lixo -->
-                        <Border Grid.Row="2" Grid.Column="0" Background="#1E2235" CornerRadius="12" Padding="18" Margin="0,0,10,0">
+                        <Border Grid.Row="2" Grid.Column="0" Background="#1E2235" CornerRadius="12" Padding="18" Margin="0,0,10,14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,10">
                                     <TextBlock Text="🧹 Limpeza de Shaders &amp; Caches" FontSize="16" FontWeight="Bold" Foreground="White"/>
@@ -184,7 +185,7 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, Sys
                         </Border>
 
                         <!-- Card 6: Inicialização Automática -->
-                        <Border Grid.Row="2" Grid.Column="1" Background="#1E2235" CornerRadius="12" Padding="18" Margin="10,0,0,0">
+                        <Border Grid.Row="2" Grid.Column="1" Background="#1E2235" CornerRadius="12" Padding="18" Margin="10,0,0,14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,10">
                                     <TextBlock Text="🚀 Inicialização &amp; Segundo Plano" FontSize="16" FontWeight="Bold" Foreground="White"/>
@@ -194,6 +195,34 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, Sys
                                 </Grid>
                                 <TextBlock Name="TxtDescStartup" Text="Verificando se há lançadores e overlays pesando no boot..." TextWrapping="Wrap" Foreground="#94A3B8" FontSize="12" Margin="0,0,0,14" Height="42"/>
                                 <Button Name="BtnGerenciadorTarefas" Content="⚡ Abrir Inicialização do Windows" Background="#334155"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card 7: Monitor & Taxa de Atualização -->
+                        <Border Grid.Row="3" Grid.Column="0" Background="#1E2235" CornerRadius="12" Padding="18" Margin="0,0,10,0">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,10">
+                                    <TextBlock Text="🖥️ Taxa de Atualização do Monitor" FontSize="16" FontWeight="Bold" Foreground="White"/>
+                                    <Border Name="BadgeMonitor" HorizontalAlignment="Right" Background="#334155" CornerRadius="6" Padding="8,3">
+                                        <TextBlock Name="TxtBadgeMonitor" Text="Checando..." FontSize="12" FontWeight="Bold" Foreground="White"/>
+                                    </Border>
+                                </Grid>
+                                <TextBlock Name="TxtDescMonitor" Text="Verificando se o monitor gamer está travado em 60 Hz no Windows..." TextWrapping="Wrap" Foreground="#94A3B8" FontSize="12" Margin="0,0,0,14" Height="42"/>
+                                <Button Name="BtnAjustarMonitor" Content="⚙️ Abrir Configurações de Tela" Background="#334155"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Card 8: Modo de Jogo e Otimizações de Latência -->
+                        <Border Grid.Row="3" Grid.Column="1" Background="#1E2235" CornerRadius="12" Padding="18" Margin="10,0,0,0">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,10">
+                                    <TextBlock Text="🎮 Modo de Jogo &amp; Latência" FontSize="16" FontWeight="Bold" Foreground="White"/>
+                                    <Border Name="BadgeGameMode" HorizontalAlignment="Right" Background="#334155" CornerRadius="6" Padding="8,3">
+                                        <TextBlock Name="TxtBadgeGameMode" Text="Checando..." FontSize="12" FontWeight="Bold" Foreground="White"/>
+                                    </Border>
+                                </Grid>
+                                <TextBlock Name="TxtDescGameMode" Text="Verificando se o Modo de Jogo do Windows prioriza os núcleos da CPU..." TextWrapping="Wrap" Foreground="#94A3B8" FontSize="12" Margin="0,0,0,14" Height="42"/>
+                                <Button Name="BtnConfigGameMode" Content="🎮 Configurar Modo de Jogo" Background="#334155"/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -300,6 +329,18 @@ $BadgeStartup = $window.FindName("BadgeStartup")
 $TxtBadgeStartup = $window.FindName("TxtBadgeStartup")
 $TxtDescStartup = $window.FindName("TxtDescStartup")
 $BtnGerenciadorTarefas = $window.FindName("BtnGerenciadorTarefas")
+
+# Card 7 Monitor
+$BadgeMonitor = $window.FindName("BadgeMonitor")
+$TxtBadgeMonitor = $window.FindName("TxtBadgeMonitor")
+$TxtDescMonitor = $window.FindName("TxtDescMonitor")
+$BtnAjustarMonitor = $window.FindName("BtnAjustarMonitor")
+
+# Card 8 Game Mode
+$BadgeGameMode = $window.FindName("BadgeGameMode")
+$TxtBadgeGameMode = $window.FindName("TxtBadgeGameMode")
+$TxtDescGameMode = $window.FindName("TxtDescGameMode")
+$BtnConfigGameMode = $window.FindName("BtnConfigGameMode")
 
 # Tab 2 Upgrade Advisor
 $TxtNivelHardware = $window.FindName("TxtNivelHardware")
@@ -568,6 +609,72 @@ function Run-AuditScan {
         $TxtDescStartup.Text = "Poucos aplicativos iniciando com o sistema. O boot e os recursos em repouso estão preservados."
     }
 
+    # 11. Monitor Refresh Rate (Hz) & Resolution Check
+    $currentHz = 60
+    $resX = 1920
+    $resY = 1080
+    try {
+        $video = Get-CimInstance Win32_VideoController | Where-Object { $_.CurrentRefreshRate -gt 0 } | Select-Object -First 1
+        if ($video) {
+            $currentHz = [int]$video.CurrentRefreshRate
+            if ($currentHz -eq 143) { $currentHz = 144 }
+            if ($currentHz -eq 164) { $currentHz = 165 }
+            if ($currentHz -eq 239) { $currentHz = 240 }
+            $resX = [int]$video.CurrentHorizontalResolution
+            $resY = [int]$video.CurrentVerticalResolution
+        }
+    } catch {}
+
+    # Detect Max Supported Hz from EDID
+    $maxHz = $currentHz
+    try {
+        $modes = Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorListedSupportedSourceModes -ErrorAction SilentlyContinue
+        if ($modes) {
+            foreach ($m in $modes.MonitorSourceModes) {
+                if ($m.VerticalRefreshRateDenominator -gt 0) {
+                    $val = [math]::Round($m.VerticalRefreshRateNumerator / $m.VerticalRefreshRateDenominator)
+                    if ($val -gt $maxHz) { $maxHz = $val }
+                }
+            }
+        }
+    } catch {}
+
+    $isMonitorThrottled = ($maxHz -gt $currentHz -and ($maxHz - $currentHz) -ge 15)
+    $global:DiagnosticState.Monitor = @{
+        CurrentHz = $currentHz;
+        MaxHz = $maxHz;
+        ResX = $resX;
+        ResY = $resY;
+        IsThrottled = $isMonitorThrottled
+    }
+
+    if ($isMonitorThrottled) {
+        Set-BadgeColor $BadgeMonitor $TxtBadgeMonitor "TRAVADO ($currentHz Hz)" "danger"
+        $TxtDescMonitor.Text = "ALERTA: Seu monitor suporta até $maxHz Hz, mas o Windows está travado em $currentHz Hz! Clique abaixo para liberar a fluidez total."
+    } elseif ($currentHz -ge 120) {
+        Set-BadgeColor $BadgeMonitor $TxtBadgeMonitor "ALTA TAXA ($currentHz Hz)" "success"
+        $TxtDescMonitor.Text = "Excelente! Monitor operando em alta fluidez ($currentHz Hz em ${resX}x${resY}) para menor latência."
+    } else {
+        Set-BadgeColor $BadgeMonitor $TxtBadgeMonitor "PADRÃO ($currentHz Hz)" "success"
+        $TxtDescMonitor.Text = "Monitor operando na taxa nativa de $currentHz Hz em ${resX}x${resY}."
+    }
+
+    # 12. Windows Game Mode & Latency
+    $gameModeActive = $true
+    try {
+        $gmVal = (Get-ItemProperty -Path 'HKCU:\Software\Microsoft\GameBar' -Name 'AutoGameModeEnabled' -ErrorAction SilentlyContinue).AutoGameModeEnabled
+        if ($null -ne $gmVal -and $gmVal -eq 0) { $gameModeActive = $false }
+    } catch {}
+
+    $global:DiagnosticState.GameMode = $gameModeActive
+    if ($gameModeActive) {
+        Set-BadgeColor $BadgeGameMode $TxtBadgeGameMode "ATIVADO" "success"
+        $TxtDescGameMode.Text = "O Windows prioriza processos de jogos e desativa tarefas secundárias durante a gameplay."
+    } else {
+        Set-BadgeColor $BadgeGameMode $TxtBadgeGameMode "DESATIVADO" "warning"
+        $TxtDescGameMode.Text = "O Modo de Jogo está desligado. Recomenda-se ativar para garantir prioridade de CPU para os jogos."
+    }
+
     # Update Tab 2: Individual Upgrade Advisor
     Update-UpgradeAdvisorTab
 
@@ -717,6 +824,31 @@ function Update-UpgradeAdvisorTab {
         })
     }
 
+    # Dynamic Rule: Monitor Refresh Rate & High Hz Check
+    $mon = $global:DiagnosticState.Monitor
+    if ($mon.IsThrottled) {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "MONITOR GAMER TRAVADO: Mudança de $($mon.CurrentHz) Hz para $($mon.MaxHz) Hz"
+            Categoria = "CONFIGURAÇÃO GRATUITA DE ALTO IMPACTO"
+            Nivel = "danger"
+            Desc = "Seu monitor suporta $($mon.MaxHz) Hz, mas o Windows está configurado em apenas $($mon.CurrentHz) Hz! Você está recebendo menos da metade dos quadros reais que a sua tela consegue exibir. Clique no botão da aba Diagnóstico para mudar para $($mon.MaxHz) Hz imediatamente."
+        })
+    } elseif ($mon.CurrentHz -ge 120) {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "MONITOR GAMER: Alta Taxa de Fluidez ($($mon.CurrentHz) Hz @ $($mon.ResX)x$($mon.ResY))"
+            Categoria = "PONTO FORTE DO COMPUTADOR"
+            Nivel = "success"
+            Desc = "Sua tela está operando em alta taxa de atualização ($($mon.CurrentHz) Hz), entregando o menor tempo de resposta e fluidez máxima nos jogos."
+        })
+    } else {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "MONITOR: Upgrade Futuro para Monitor Gamer 144Hz+"
+            Categoria = "DICA DE UPGRADE VISUAL"
+            Nivel = "info"
+            Desc = "Seu monitor atual opera em $($mon.CurrentHz) Hz. Para jogos competitivos rápidos (FPS, tiro, corrida), a transição para um monitor de 144Hz ou superior é um dos upgrades visuais mais perceptíveis em fluidez."
+        })
+    }
+
     # Render Recommendations Cards
     foreach ($r in $recs) {
         $card = New-Object Windows.Controls.Border
@@ -807,7 +939,7 @@ function Update-UpgradeAdvisorTab {
 # Function: Populate Tab 3 (Checklist de Sucesso)
 function Update-ChecklistTab {
     $ContainerChecklist.Children.Clear()
-    $totalChecks = 5
+    $totalChecks = 6
     $scoreCount = 0
 
     $items = @(
@@ -840,6 +972,12 @@ function Update-ChecklistTab {
             Success = ($global:DiagnosticState.JunkMB -lt 5000)
             SuccessDesc = "LIMPO - Menos de 5GB de arquivos temporários e shaders acumulados."
             FailDesc = "ACÚMULO ELEVADO - Caches antigos de drivers de vídeo estão ocupando espaço precioso."
+        },
+        @{
+            Name = "Taxa de Atualização do Monitor (Hz)"
+            Success = (-not $global:DiagnosticState.Monitor.IsThrottled)
+            SuccessDesc = "OTIMIZADO - Monitor operando na taxa máxima ($($global:DiagnosticState.Monitor.CurrentHz) Hz)."
+            FailDesc = "TRAVADO - Monitor suporta $($global:DiagnosticState.Monitor.MaxHz) Hz mas está em $($global:DiagnosticState.Monitor.CurrentHz) Hz."
         }
     )
 
@@ -1025,6 +1163,16 @@ $BtnLimparTudo.Add_Click({
 # Button: Abrir Inicialização do Windows
 $BtnGerenciadorTarefas.Add_Click({
     Start-Process "taskmgr.exe"
+})
+
+# Button: Abrir Configurações de Tela (Taxa de Hz)
+$BtnAjustarMonitor.Add_Click({
+    Start-Process "ms-settings:display-advanced"
+})
+
+# Button: Abrir Configurações de Modo de Jogo
+$BtnConfigGameMode.Add_Click({
+    Start-Process "ms-settings:gaming-gamemode"
 })
 
 # Initial Scan on launch
