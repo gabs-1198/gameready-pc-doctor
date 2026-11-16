@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-    GameReady PC Doctor - Otimizador e Verificador de Performance para Jogos
+    GameReady PC Doctor - Otimizador, Verificador e Consultor de Upgrades para Jogos
     Compatível com Windows 10 e Windows 11 (PowerShell 5.1 e 7+)
     Autor: Gabriel Lopes (https://github.com/gabs-1198)
 #>
@@ -10,8 +10,8 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, Sys
 [xml]$xaml = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="GameReady PC Doctor - Otimizador e Verificador Gamer" 
-        Height="820" Width="1020" 
+        Title="GameReady PC Doctor - Diagnóstico, Otimização e Consultor de Upgrades" 
+        Height="860" Width="1040" 
         WindowStartupLocation="CenterScreen" 
         Background="#0F111A" 
         Foreground="#ECEFF4"
@@ -48,7 +48,7 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, Sys
             <Setter Property="Foreground" Value="#94A3B8"/>
             <Setter Property="FontSize" Value="15"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="Padding" Value="18,10"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
@@ -88,7 +88,7 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, Sys
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                         <TextBlock Text="⚡ GameReady PC Doctor" FontSize="24" FontWeight="Bold" Foreground="#38BDF8"/>
                         <Border Background="#10B981" CornerRadius="6" Padding="8,2" Margin="14,2,0,2">
-                            <TextBlock Text="OPEN SOURCE" FontSize="11" FontWeight="Bold" Foreground="#042F2E"/>
+                            <TextBlock Text="AI HARDWARE ADVISOR" FontSize="11" FontWeight="Bold" Foreground="#042F2E"/>
                         </Border>
                     </StackPanel>
                     <TextBlock Name="TxtSpecs" Text="Detectando componentes do hardware..." FontSize="13" Foreground="#94A3B8"/>
@@ -200,7 +200,34 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, Sys
                 </ScrollViewer>
             </TabItem>
 
-            <!-- TAB 2: VERIFICADOR DE SUCESSO -->
+            <!-- TAB 2: CONSULTOR DE UPGRADES E AVALIAÇÃO INDIVIDUAL -->
+            <TabItem Header="💡 Avaliação &amp; Upgrades">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,15,0,0">
+                    <StackPanel>
+                        <!-- Perfil e Nível de Hardware -->
+                        <Border Background="#1E2235" CornerRadius="12" Padding="20" Margin="0,0,0,18">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Perfil Individual deste Computador" FontSize="18" FontWeight="Bold" Foreground="White" Margin="0,0,0,6"/>
+                                    <TextBlock Name="TxtNivelHardware" Text="Avaliando equilíbrio entre CPU, GPU, Memória e Armazenamento..." FontSize="13" Foreground="#94A3B8"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" Name="BadgeTierHardware" Background="#6366F1" CornerRadius="8" Padding="16,8">
+                                    <TextBlock Name="TxtTierHardware" Text="ANALISANDO..." FontSize="13" FontWeight="Bold" Foreground="White"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <TextBlock Text="🎯 O que este computador precisa para atingir a melhor performance possível:" FontSize="15" FontWeight="Bold" Foreground="#38BDF8" Margin="0,0,0,14"/>
+                        <StackPanel Name="ContainerRecomendacoes"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TAB 3: VERIFICADOR DE SUCESSO -->
             <TabItem Header="✅ Verificador de Sucesso">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,15,0,0">
                     <StackPanel>
@@ -274,7 +301,13 @@ $TxtBadgeStartup = $window.FindName("TxtBadgeStartup")
 $TxtDescStartup = $window.FindName("TxtDescStartup")
 $BtnGerenciadorTarefas = $window.FindName("BtnGerenciadorTarefas")
 
-# Tab 2 Checklist
+# Tab 2 Upgrade Advisor
+$TxtNivelHardware = $window.FindName("TxtNivelHardware")
+$BadgeTierHardware = $window.FindName("BadgeTierHardware")
+$TxtTierHardware = $window.FindName("TxtTierHardware")
+$ContainerRecomendacoes = $window.FindName("ContainerRecomendacoes")
+
+# Tab 3 Checklist
 $TxtScoreGeral = $window.FindName("TxtScoreGeral")
 $BadgeScoreGeral = $window.FindName("BadgeScoreGeral")
 $TxtScoreNumero = $window.FindName("TxtScoreNumero")
@@ -306,19 +339,32 @@ function Set-BadgeColor($badge, $textBlock, $text, $type) {
 # Global state to hold scan results
 $global:DiagnosticState = @{}
 
-# Function: Run Audit Scan
+# Function: Run Complete Audit Scan
 function Run-AuditScan {
     $TxtSpecs.Text = "Analisando hardware e configurações do sistema..."
 
-    # 1. CPU & GPU & Motherboard
-    $cpu = Get-CimInstance Win32_Processor | Select-Object -First 1 Name
-    $gpu = Get-CimInstance Win32_VideoController | Select-Object -First 1 Name
-    $board = Get-CimInstance Win32_BaseBoard | Select-Object -First 1 Manufacturer, Product
-    $TxtSpecs.Text = "$($cpu.Name.Trim()) | $($gpu.Name) | Motherboard: $($board.Manufacturer) $($board.Product)"
+    # 1. CPU
+    $cpuObj = Get-CimInstance Win32_Processor | Select-Object -First 1 Name, NumberOfCores, NumberOfLogicalProcessors
+    $cpuName = $cpuObj.Name.Trim()
+    $cpuCores = $cpuObj.NumberOfCores
+    $cpuThreads = $cpuObj.NumberOfLogicalProcessors
 
-    # 2. Resizable BAR Check
+    # 2. GPU
+    $gpuObj = Get-CimInstance Win32_VideoController | Select-Object -First 1 Name, DriverVersion, AdapterRAM
+    $gpuName = $gpuObj.Name
+    $isIntegratedGpu = ($gpuName -match "Intel\(R\) HD|Intel\(R\) UHD|Iris|Radeon\(TM\) Graphics|Vega" -and $gpuName -notmatch "RTX|GTX|Radeon RX")
+
+    # 3. Motherboard
+    $boardObj = Get-CimInstance Win32_BaseBoard | Select-Object -First 1 Manufacturer, Product
+    $boardInfo = "$($boardObj.Manufacturer) $($boardObj.Product)"
+
+    $TxtSpecs.Text = "$cpuName | $gpuName | Placa-Mãe: $boardInfo"
+
+    # 4. Resizable BAR Check via nvidia-smi
     $rebarActive = $false
     $barTotal = 0
+    $pcieGen = 3
+    $pcieWidth = 16
     try {
         $nvidiaQuery = nvidia-smi -q 2>$null | Select-String -Pattern "BAR1 Memory Usage" -Context 0,2
         if ($nvidiaQuery) {
@@ -329,9 +375,24 @@ function Run-AuditScan {
                 }
             }
         }
+        $pcieRaw = nvidia-smi --query-gpu=pcie.link.gen.current,pcie.link.width.current --format=csv,noheader,nounits 2>$null
+        if ($pcieRaw) {
+            $parts = $pcieRaw.Trim().Split(',')
+            if ($parts.Count -ge 2) {
+                $pcieGen = [int]$parts[0].Trim()
+                $pcieWidth = [int]$parts[1].Trim()
+            }
+        }
     } catch {}
 
     $global:DiagnosticState.Rebar = $rebarActive
+    $global:DiagnosticState.BarTotal = $barTotal
+    $global:DiagnosticState.PcieGen = $pcieGen
+    $global:DiagnosticState.PcieWidth = $pcieWidth
+    $global:DiagnosticState.Cpu = @{ Name = $cpuName; Cores = $cpuCores; Threads = $cpuThreads }
+    $global:DiagnosticState.Gpu = @{ Name = $gpuName; IsIntegrated = $isIntegratedGpu }
+    $global:DiagnosticState.Motherboard = $boardInfo
+
     if ($rebarActive) {
         Set-BadgeColor $BadgeRebar $TxtBadgeRebar "ATIVADO ($barTotal MiB)" "success"
         $TxtDescRebar.Text = "Excelente! A CPU acessa toda a VRAM da sua GPU sem gargalo de barramento."
@@ -344,7 +405,7 @@ function Run-AuditScan {
         $BtnGuiaRebar.Content = "📘 Como Ativar na BIOS"
     }
 
-    # 3. VBS / Core Isolation Check
+    # 5. VBS / Core Isolation Check
     $vbsActive = $false
     try {
         $dg = Get-CimInstance -ClassName Win32_DeviceGuard -Namespace root\Microsoft\Windows\DeviceGuard -ErrorAction SilentlyContinue
@@ -362,14 +423,19 @@ function Run-AuditScan {
         $TxtDescVbs.Text = "O Windows está rodando com isolamento de memória de segurança. Isso custa de 3% a 8% de FPS no seu processador."
     }
 
-    # 4. RAM Check (Speed and Dual Channel)
+    # 6. RAM Check (Speed, Modules, Channels, Capacity)
     $ramModules = Get-CimInstance Win32_PhysicalMemory -ErrorAction SilentlyContinue
     $ramCount = $ramModules.Count
     $ramSpeed = ($ramModules | Select-Object -First 1).ConfiguredClockSpeed
     $ramCapGB = [math]::Round((($ramModules | Measure-Object -Property Capacity -Sum).Sum / 1GB), 0)
-
     $ramDual = ($ramCount -ge 2)
-    $global:DiagnosticState.RAM = @{ Speed = $ramSpeed; Dual = $ramDual; Cap = $ramCapGB }
+
+    $global:DiagnosticState.RAM = @{ 
+        Speed = $ramSpeed; 
+        Dual = $ramDual; 
+        Cap = $ramCapGB; 
+        Count = $ramCount 
+    }
 
     if ($ramDual -and $ramSpeed -ge 3200) {
         Set-BadgeColor $BadgeRam $TxtBadgeRam "OTIMIZADA ($ramCapGB GB @ $ramSpeed MHz)" "success"
@@ -378,11 +444,11 @@ function Run-AuditScan {
         Set-BadgeColor $BadgeRam $TxtBadgeRam "DUAL-CHANNEL ($ramSpeed MHz)" "warning"
         $TxtDescRam.Text = "Dual Channel ativo, mas confira na BIOS se o perfil XMP/DOCP para frequências maiores está disponível."
     } else {
-        Set-BadgeColor $BadgeRam $TxtBadgeRam "SINGLE CHANNEL" "danger"
+        Set-BadgeColor $BadgeRam $TxtBadgeRam "SINGLE CHANNEL ($ramCapGB GB)" "danger"
         $TxtDescRam.Text = "Apenas 1 canal de memória detectado. Adicionar outro pente dobra a largura de banda da CPU."
     }
 
-    # 5. Power Plan Check
+    # 7. Power Plan Check
     $powerScheme = powercfg /getactivescheme
     $isMaxPerf = ($powerScheme -match "Desempenho M|Ultimate|High")
     $global:DiagnosticState.Power = $isMaxPerf
@@ -401,7 +467,24 @@ function Run-AuditScan {
         $BtnAtivarPower.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#10B981")
     }
 
-    # 6. Disk Junk & Shaders Scan (Using 100% Dynamic Portable Paths)
+    # 8. Disk Space & Storage Type Check (SSD vs HDD)
+    $cDrive = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'" -ErrorAction SilentlyContinue
+    $diskFreeGB = [math]::Round(($cDrive.FreeSpace / 1GB), 1)
+    $diskTotalGB = [math]::Round(($cDrive.Size / 1GB), 1)
+    $diskPercentFree = [math]::Round((($cDrive.FreeSpace / $cDrive.Size) * 100), 1)
+
+    $diskDrive = Get-CimInstance Win32_DiskDrive -ErrorAction SilentlyContinue | Select-Object -First 1 Model, MediaType, InterfaceType
+    $isSSD = ($diskDrive.Model -match "SSD|NVMe|M\.2|Optane" -or $diskDrive.MediaType -match "SSD")
+
+    $global:DiagnosticState.Storage = @{
+        FreeGB = $diskFreeGB;
+        TotalGB = $diskTotalGB;
+        PercentFree = $diskPercentFree;
+        IsSSD = $isSSD;
+        Model = $diskDrive.Model
+    }
+
+    # 9. Disk Junk & Shaders Scan (Portable Dynamic Paths)
     $junkBytes = 0
     $junkPaths = @(
         (Join-Path $env:LOCALAPPDATA "NVIDIA\DXCache"),
@@ -429,7 +512,7 @@ function Run-AuditScan {
         $TxtDescLixo.Text = "Seu SSD está livre de acúmulos pesados de shaders ou temporários."
     }
 
-    # 7. Startup Bloat Check
+    # 10. Startup Bloat Check
     $startupApps = Get-CimInstance Win32_StartupCommand -ErrorAction SilentlyContinue
     $startupCount = $startupApps.Count
     $global:DiagnosticState.StartupCount = $startupCount
@@ -442,11 +525,241 @@ function Run-AuditScan {
         $TxtDescStartup.Text = "Poucos aplicativos iniciando com o sistema. O boot e os recursos em repouso estão preservados."
     }
 
-    # Update Tab 2 Checklist
+    # Update Tab 2: Individual Upgrade Advisor
+    Update-UpgradeAdvisorTab
+
+    # Update Tab 3: Success Checklist
     Update-ChecklistTab
 }
 
-# Function: Populate Tab 2 (Checklist de Sucesso)
+# Function: Populate Tab 2 (Consultor de Upgrades & Avaliação Individual)
+function Update-UpgradeAdvisorTab {
+    $ContainerRecomendacoes.Children.Clear()
+
+    # 1. Evaluate System Tier
+    $cpuCores = $global:DiagnosticState.Cpu.Cores
+    $ramGB = $global:DiagnosticState.RAM.Cap
+    $isGpuIntegrated = $global:DiagnosticState.Gpu.IsIntegrated
+    $gpuName = $global:DiagnosticState.Gpu.Name
+
+    if ($isGpuIntegrated) {
+        $TxtTierHardware.Text = "PC BÁSICO / ESPORTS"
+        $BadgeTierHardware.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#D97706")
+        $TxtNivelHardware.Text = "Hardware configurado para tarefas gerais e jogos leves/competitivos de entrada."
+    } elseif ($cpuCores -ge 8 -and $ramGB -ge 32 -and ($gpuName -match "4070|4080|4090|4060|3080|7800|7900")) {
+        $TxtTierHardware.Text = "ALTA PERFORMANCE GAMER"
+        $BadgeTierHardware.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#065F46")
+        $TxtNivelHardware.Text = "Configuração de alto nível para jogos em 1080p, 1440p e 4K competitivo."
+    } elseif ($cpuCores -ge 6 -and $ramGB -ge 16) {
+        $TxtTierHardware.Text = "INTERMEDIÁRIO GAMER"
+        $BadgeTierHardware.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#4F46E5")
+        $TxtNivelHardware.Text = "Configuração sólida e equilibrada para rodar a maioria dos jogos modernos em 1080p."
+    } else {
+        $TxtTierHardware.Text = "SETUP DE ENTRADA"
+        $BadgeTierHardware.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#7C3AED")
+        $TxtNivelHardware.Text = "Configuração funcional, mas que se beneficiará muito dos upgrades recomendados abaixo."
+    }
+
+    # 2. Build Dynamic Personalized Recommendations for THIS Specific PC
+    $recs = [System.Collections.Generic.List[PSObject]]::new()
+
+    # Dynamic Rule: RAM Capacity & Channel
+    if ($ramGB -lt 16) {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "UPGRADE DE MEMÓRIA: Aumentar para 16 GB ou mais"
+            Categoria = "UPGRADE DE HARDWARE RECOMENDADO"
+            Nivel = "danger"
+            Desc = "Seu computador possui apenas $ramGB GB de RAM instalada. Jogos modernos exigem pelo menos 16 GB; menos que isso causa travamentos severos por falta de memória."
+        })
+    } elseif (-not $global:DiagnosticState.RAM.Dual) {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "UPGRADE DE HARDWARE: Instalar um 2º pente de RAM (Dual Channel)"
+            Categoria = "GANHO DE ATÉ 20-30% DE FPS EM JOGOS"
+            Nivel = "danger"
+            Desc = "Sua memória está operando em Canal Único (Single Channel). Adicionar um segundo módulo idêntico dobra a taxa de transferência com a CPU e elimina quedas bruscas de FPS."
+        })
+    } elseif ($global:DiagnosticState.RAM.Speed -lt 2933 -and $ramGB -ge 16) {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "CONFIGURAÇÃO NA BIOS: Ativar perfil XMP/DOCP/EXPO da Memória"
+            Categoria = "AJUSTE GRATUITO DE CONFIGURAÇÃO"
+            Nivel = "warning"
+            Desc = "Sua RAM está rodando a apenas $($global:DiagnosticState.RAM.Speed) MHz. Provavelmente seus módulos suportam velocidades maiores que podem ser ativadas ligando o XMP na BIOS."
+        })
+    } else {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "MEMÓRIA RAM: Configuração Excelente ($ramGB GB @ $($global:DiagnosticState.RAM.Speed) MHz)"
+            Categoria = "PONTO FORTE DO COMPUTADOR"
+            Nivel = "success"
+            Desc = "Seus módulos estão em Dual Channel de alta velocidade. Nenhuma necessidade de gastar com memória RAM neste computador."
+        })
+    }
+
+    # Dynamic Rule: Resizable BAR
+    if (-not $global:DiagnosticState.Rebar) {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "CONFIGURAÇÃO NA BIOS: Ativar o Resizable BAR (ReBAR)"
+            Categoria = "AJUSTE DE ALTO IMPACTO (SEM CUSTO)"
+            Nivel = "danger"
+            Desc = "Sua placa de vídeo suporta Resizable BAR, mas ele está desligado na BIOS. Ativá-lo permite que o processador envie texturas diretamente para a VRAM, estabilizando os FPS mínimos."
+        })
+    } else {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "RESIZABLE BAR: Ativado e Operando em Capacidade Total"
+            Categoria = "PONTO FORTE DO COMPUTADOR"
+            Nivel = "success"
+            Desc = "A CPU tem acesso direto e irrestrito à VRAM da sua placa de vídeo ($($global:DiagnosticState.BarTotal) MiB mapeados)."
+        })
+    }
+
+    # Dynamic Rule: VBS / Core Isolation
+    if ($global:DiagnosticState.VBS) {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "SISTEMA: Desativar Isolamento do Núcleo (VBS) no Windows 11"
+            Categoria = "RECUPERAÇÃO DE LATÊNCIA DA CPU"
+            Nivel = "warning"
+            Desc = "A camada de virtualização de segurança do Windows 11 está ativa, consumindo cerca de 3% a 8% do processamento em jogos. Pode ser desativada na aba Diagnóstico."
+        })
+    } else {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "LATÊNCIA DE CPU: Isolamento de Núcleo Desativado"
+            Categoria = "PONTO FORTE DO COMPUTADOR"
+            Nivel = "success"
+            Desc = "O processador opera com acesso direto ao hardware sem sobrecarga de máquina virtual do Windows."
+        })
+    }
+
+    # Dynamic Rule: Storage (SSD vs HDD & Free Space)
+    if (-not $global:DiagnosticState.Storage.IsSSD) {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "UPGRADE CRÍTICO: Migrar o Windows e Jogos para um SSD NVMe"
+            Categoria = "O UPGRADE MAIS IMPORTANTE DESTE PC"
+            Nivel = "danger"
+            Desc = "Seu sistema parece estar instalado em um disco mecânico tradicional (HDD). A troca por um SSD NVMe M.2 ou SATA reduzirá os tempos de carregamento em mais de 10x e acabará com travamentos de streaming de texturas."
+        })
+    } elseif ($global:DiagnosticState.Storage.PercentFree -lt 15) {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "ALERTA DE ESPAÇO: Liberar Espaço no Drive C: ($($global:DiagnosticState.Storage.PercentFree)% livre)"
+            Categoria = "PREVENÇÃO DE QUEDA DE DESEMPENHO NO SSD"
+            Nivel = "danger"
+            Desc = "SSDs com menos de 15% de espaço livre sofrem com esgotamento de cache SLC, aumentando drasticamente o tempo de leitura e gravação."
+        })
+    } else {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "ARMAZENAMENTO: SSD Rápido com Folga ($($global:DiagnosticState.Storage.FreeGB) GB Livres)"
+            Categoria = "PONTO FORTE DO COMPUTADOR"
+            Nivel = "success"
+            Desc = "Seu SSD possui $($global:DiagnosticState.Storage.PercentFree)% de espaço livre, garantindo taxas máximas de leitura e durabilidade ideal das células de memória."
+        })
+    }
+
+    # Dynamic Rule: PCIe 3.0 vs 8-Lane GPU
+    if ($global:DiagnosticState.PcieWidth -le 8 -and $global:DiagnosticState.PcieGen -le 3 -and -not $isGpuIntegrated) {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "UPGRADE FUTURO (OPCIONAL): Placa-Mãe com suporte a PCIe 4.0"
+            Categoria = "DICA TÉCNICA DE LONGO PRAZO"
+            Nivel = "info"
+            Desc = "Sua placa de vídeo opera em PCIe 3.0 x8 devido ao chipset da placa-mãe. No futuro, migrar para uma placa-mãe PCIe 4.0 liberará o dobro de largura de banda para a GPU. Manter o Resizable BAR ativo compensa boa parte dessa diferença."
+        })
+    }
+
+    # Dynamic Rule: Integrated GPU Alert
+    if ($isGpuIntegrated) {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "UPGRADE DE GPU: Adicionar Placa de Vídeo Dedicada"
+            Categoria = "TRANSFORMAÇÃO COMPLETA PARA JOGOS"
+            Nivel = "danger"
+            Desc = "O computador está usando a GPU integrada do processador. Para jogar lançamentos com gráficos no alto a 60+ FPS, instalar uma placa dedicada (ex: RTX 4060 ou Radeon RX 6600) multiplicará o poder gráfico."
+        })
+    }
+
+    # Render Recommendations Cards
+    foreach ($r in $recs) {
+        $card = New-Object Windows.Controls.Border
+        $card.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#1E2235")
+        $card.CornerRadius = New-Object Windows.CornerRadius(10)
+        $card.Padding = New-Object Windows.Thickness(18)
+        $card.Margin = New-Object Windows.Thickness(0, 0, 0, 12)
+
+        $grid = New-Object Windows.Controls.Grid
+        $col0 = New-Object Windows.Controls.ColumnDefinition
+        $col0.Width = New-Object Windows.GridLength(1, [Windows.GridUnitType]::Star)
+        $col1 = New-Object Windows.Controls.ColumnDefinition
+        $col1.Width = [Windows.GridLength]::Auto
+        $grid.ColumnDefinitions.Add($col0)
+        $grid.ColumnDefinitions.Add($col1)
+
+        $stack = New-Object Windows.Controls.StackPanel
+        $catTxt = New-Object Windows.Controls.TextBlock
+        $catTxt.Text = $r.Categoria
+        $catTxt.FontSize = 11
+        $catTxt.FontWeight = "Bold"
+        $catTxt.Margin = New-Object Windows.Thickness(0, 0, 0, 4)
+
+        $titleTxt = New-Object Windows.Controls.TextBlock
+        $titleTxt.Text = $r.Titulo
+        $titleTxt.FontSize = 15
+        $titleTxt.FontWeight = "Bold"
+        $titleTxt.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#F8FAFC")
+        $titleTxt.Margin = New-Object Windows.Thickness(0, 0, 0, 6)
+
+        $descTxt = New-Object Windows.Controls.TextBlock
+        $descTxt.Text = $r.Desc
+        $descTxt.FontSize = 13
+        $descTxt.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#94A3B8")
+        $descTxt.TextWrapping = [Windows.TextWrapping]::Wrap
+
+        $stack.Children.Add($catTxt)
+        $stack.Children.Add($titleTxt)
+        $stack.Children.Add($descTxt)
+        [Windows.Controls.Grid]::SetColumn($stack, 0)
+        $grid.Children.Add($stack)
+
+        $badge = New-Object Windows.Controls.Border
+        $badge.CornerRadius = New-Object Windows.CornerRadius(6)
+        $badge.Padding = New-Object Windows.Thickness(12, 6)
+        $badge.VerticalAlignment = [Windows.VerticalAlignment]::Top
+
+        $badgeTxt = New-Object Windows.Controls.TextBlock
+        $badgeTxt.FontWeight = "Bold"
+        $badgeTxt.FontSize = 12
+
+        switch ($r.Nivel) {
+            "danger" {
+                $badge.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#7F1D1D")
+                $badgeTxt.Text = "🔴 PRIORIDADE ALTA"
+                $badgeTxt.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#FCA5A5")
+                $catTxt.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#F87171")
+            }
+            "warning" {
+                $badge.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#78350F")
+                $badgeTxt.Text = "🟡 AJUSTE RECOMENDADO"
+                $badgeTxt.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#FCD34D")
+                $catTxt.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#FBBF24")
+            }
+            "info" {
+                $badge.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#1E3A8A")
+                $badgeTxt.Text = "🔵 LONGO PRAZO"
+                $badgeTxt.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#93C5FD")
+                $catTxt.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#60A5FA")
+            }
+            default {
+                $badge.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#065F46")
+                $badgeTxt.Text = "🟢 PONTO FORTE"
+                $badgeTxt.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#34D399")
+                $catTxt.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#34D399")
+            }
+        }
+
+        $badge.Child = $badgeTxt
+        [Windows.Controls.Grid]::SetColumn($badge, 1)
+        $grid.Children.Add($badge)
+
+        $card.Child = $grid
+        $ContainerRecomendacoes.Children.Add($card)
+    }
+}
+
+# Function: Populate Tab 3 (Checklist de Sucesso)
 function Update-ChecklistTab {
     $ContainerChecklist.Children.Clear()
     $totalChecks = 5
@@ -467,8 +780,8 @@ function Update-ChecklistTab {
         },
         @{
             Name = "Frequência e Dual-Channel da Memória RAM"
-            Success = ($global:DiagnosticState.RAM.Dual -and $global:DiagnosticState.RAM.Speed -ge 3200)
-            SuccessDesc = "PERFEITO - 2 ou mais canais ativos com perfil XMP/DOCP em alta frequência ($($global:DiagnosticState.RAM.Speed) MHz)."
+            Success = ($global:DiagnosticState.RAM.Dual -and $global:DiagnosticState.RAM.Speed -ge 3000)
+            SuccessDesc = "PERFEITO - 2 ou mais canais ativos com alta frequência ($($global:DiagnosticState.RAM.Speed) MHz)."
             FailDesc = "ATENÇÃO - Memória operando em baixa frequência ou em canal único."
         },
         @{
@@ -557,7 +870,7 @@ function Update-ChecklistTab {
         $BadgeScoreGeral.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#065F46")
         $TxtScoreNumero.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#34D399")
     } elseif ($pct -ge 70) {
-        $TxtScoreGeral.Text = "O PC está muito bom, mas ainda há $totalChecks - $scoreCount otimizações que podem liberar mais FPS."
+        $TxtScoreGeral.Text = "O PC está muito bom, mas ainda há $($totalChecks - $scoreCount) otimizações que podem liberar mais FPS."
         $BadgeScoreGeral.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#78350F")
         $TxtScoreNumero.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#FBBF24")
     } else {

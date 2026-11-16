@@ -7,46 +7,51 @@
   <img src="https://img.shields.io/badge/UI-Native%20WPF%20XAML-6366F1?style=for-the-badge" alt="WPF UI"/>
 </p>
 
-O **GameReady PC Doctor** é um utilitário portátil de código aberto para Windows projetado para auditar gargalos de hardware e configurações em computadores para jogos. Ele ajuda tanto usuários avançados quanto leigos a extraírem o desempenho máximo de seus computadores em poucos cliques, sem necessidade de instalar dependências externas.
+O **GameReady PC Doctor** é um utilitário portátil de código aberto para Windows que audita gargalos, otimiza o sistema e **avalia cada computador isoladamente**, fornecendo um diagnóstico personalizado e recomendações práticas de upgrades para extrair o máximo de cada configuração.
 
 ---
 
-## 🎯 Funcionalidades Principais
+## 🎯 Abas e Recursos
 
-### 1. 🚀 Diagnóstico & Otimização de Gargalos
-* **🎮 Resizable BAR (ReBAR):** Detecta se a placa de vídeo está transferindo dados em blocos reduzidos de 256 MB ou com acesso total à VRAM (8 GB+). Inclui guia passo a passo para ativar na BIOS de qualquer fabricante (**ASUS, MSI, Gigabyte, ASRock**).
-* **🛡️ Isolamento do Núcleo (VBS):** Identifica se o hipervisor de segurança do Windows 11 está ativo (o que causa uma perda de 3% a 8% de FPS em processadores modernos). Fornece atalho direto para desativar com facilidade.
-* **⚡ Memória RAM (XMP / DOCP):** Verifica se as memórias estão operando em **Dual Channel** e se o perfil de alta frequência está ativado.
-* **🔋 Plano de Energia:** Analisa o esquema de energia do sistema e permite ativar o modo **Desempenho Máximo** (*Ultimate Performance*) com 1 clique.
-* **🧹 Limpeza de Shaders & Lixo:** Localiza acúmulos gigantescos no cache de shaders DirectX da NVIDIA (`DXCache`) e arquivos temporários, permitindo limpeza segura com 1 clique para evitar travamentos de shaders.
-* **🚀 Inicialização Automática:** Alerta sobre lançadores múltiplos e sobreposições desnecessárias rodando no boot do Windows.
+### 1. 💡 Avaliação Individual & Consultor de Upgrades
+* **Classificação de Tier do PC:** Avalia o equilíbrio entre CPU, GPU, RAM e Armazenamento (ex: *Alta Performance Gamer*, *Intermediário Gamer*, *PC Básico / Esports*).
+* **Diagnóstico Personalizado para o Hardware Detectado:**
+  * 🔴 **Prioridade Alta:** Alerta sobre gargalos críticos (ex: RAM em Single-Channel cortando 20-30% de FPS, sistema rodando em HD mecânico, SSD com menos de 15% de espaço livre, ou menos de 16 GB de RAM).
+  * 🟡 **Ajustes Recomendados (Gratuitos):** Orienta a ativação do Resizable BAR na BIOS, perfis XMP/DOCP/EXPO para memórias abaixo da frequência suportada e desativação do Isolamento de Núcleo (VBS) no Windows 11.
+  * 🟢 **Pontos Fortes do Computador:** Destaca os componentes que já estão em estado perfeito, evitando gastos desnecessários com upgrades.
+  * 🔵 **Dicas Técnicas de Longo Prazo:** Alertas sobre largura de banda PCIe (ex: placas x8 rodando em PCIe 3.0 vs 4.0).
 
-### 2. ✅ Verificador de Sucesso (Checklist Visual)
-* **Pontuação Geral (0% a 100%):** Placar que avalia a saúde e o preparo do computador para jogos.
-* **Checklist Inteligente:** Badges coloridas (`✅ CONCLUÍDO` / `⚠️ PENDENTE`) para cada um dos 5 pilares de otimização, garantindo certeza de que todas as melhorias foram aplicadas com sucesso.
+### 2. 🚀 Diagnóstico & Otimizações em 1 Clique
+* **🎮 Resizable BAR (ReBAR):** Diagnóstico de VRAM com guia passo a passo para BIOS ASUS, Gigabyte, MSI e ASRock.
+* **🛡️ Isolamento do Núcleo (VBS):** Atalho direto para desativar a virtualização de segurança do Windows 11 e reduzir a latência da CPU.
+* **⚡ Memória RAM:** Verificação de canais (Single vs Dual Channel) e frequências nominais.
+* **🔋 Plano de Energia:** Ativação instantânea do plano *Desempenho Máximo* (*Ultimate Performance*).
+* **🧹 Limpeza de Shaders & Caches:** Varredura e limpeza segura do cache de shaders da NVIDIA (`DXCache`) e temporários.
+* **🚀 Inicialização Automática:** Atalho rápido para gerenciar os programas do boot.
+
+### 3. ✅ Verificador de Sucesso (Validação Pós-Ajustes)
+* **Placar Geral de Otimização (0% a 100%):** Avalia se todas as otimizações recomendadas foram aplicadas.
+* **Checklist Inteligente:** Crachás visuais verdes (`✅ CONCLUÍDO`) e vermelhos (`⚠️ PENDENTE`).
 
 ---
 
 ## 🚀 Como Executar
 
-Não é necessário instalar Python, Node.js ou compilar nada:
+Não requer instalação de Python, Node.js ou bibliotecas extras:
 
-1. Baixe ou clone este repositório.
+1. Baixe ou clone o repositório.
 2. Dê um **duplo clique** no arquivo:
    👉 **`Iniciar_Otimizador.bat`**
 3. Confirme a permissão de Administrador (UAC).
-4. A interface gráfica moderna em modo escuro abrirá automaticamente!
+4. O aplicativo abrirá com interface moderna nativa em Dark Mode.
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
-* **Windows Presentation Foundation (WPF / XAML):** Interface gráfica nativa de alta performance e baixo consumo de memória.
-* **PowerShell 5.1 / 7+:** Scripts de leitura segura e chamadas ao WMI/CIM do Windows.
-* **NVIDIA System Management Interface (`nvidia-smi`):** Telemetria direta da GPU e barramento PCIe.
+* **Windows Presentation Foundation (WPF / XAML):** Interface gráfica nativa de alta velocidade e design moderno.
+* **PowerShell 5.1 / 7+:** Coleta dinâmica via WMI/CIM e chamadas ao sistema.
+* **NVIDIA System Management Interface (`nvidia-smi`):** Leitura de barramento PCIe e mapeamento de VRAM.
 
 ---
-
-## 📄 Licença
-Distribuído sob a licença **MIT**. Consulte `LICENSE` para mais informações.
 
 Desenvolvido por [Gabriel Lopes](https://github.com/gabs-1198).
