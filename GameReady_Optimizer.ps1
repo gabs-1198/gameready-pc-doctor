@@ -467,21 +467,64 @@ function Run-AuditScan {
         $BtnAtivarPower.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#10B981")
     }
 
-    # 8. Disk Space & Storage Type Check (SSD vs HDD)
+    # 8. Disk Space & Storage Type Check (SSD vs HDD vs NVMe for the EXACT C: Drive)
     $cDrive = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'" -ErrorAction SilentlyContinue
     $diskFreeGB = [math]::Round(($cDrive.FreeSpace / 1GB), 1)
     $diskTotalGB = [math]::Round(($cDrive.Size / 1GB), 1)
     $diskPercentFree = [math]::Round((($cDrive.FreeSpace / $cDrive.Size) * 100), 1)
 
-    $diskDrive = Get-CimInstance Win32_DiskDrive -ErrorAction SilentlyContinue | Select-Object -First 1 Model, MediaType, InterfaceType
-    $isSSD = ($diskDrive.Model -match "SSD|NVMe|M\.2|Optane" -or $diskDrive.MediaType -match "SSD")
+    # Associate C: partition directly to its physical drive (prevents picking secondary SATA drive)
+    $cDisk = $null
+    try {
+        $cPart = Get-CimInstance Win32_LogicalDiskToPartition | Where-Object { $_.Dependent.DeviceID -eq 'C:' }
+        if ($cPart) {
+            $diskPart = Get-CimInstance Win32_DiskDriveToDiskPartition | Where-Object { $_.Dependent.DeviceID -eq $cPart.Antecedent.DeviceID }
+            if ($diskPart) {
+                $cDisk = Get-CimInstance Win32_DiskDrive | Where-Object { $_.DeviceID -eq $diskPart.Antecedent.DeviceID }
+            }
+        }
+    } catch {}
+
+    if (-not $cDisk) {
+        $cDisk = Get-CimInstance Win32_DiskDrive | Select-Object -First 1
+    }
+
+    # Advanced Multi-Layer NVMe / SSD / HDD Detection
+    $modelStr = "$($cDisk.Model)"
+    $pnpStr = "$($cDisk.PNPDeviceID)"
+    $interfaceStr = "$($cDisk.InterfaceType)"
+
+    $isNVMe = ($pnpStr -match "NVME|VEN_NVME|DEV_NVME|PCI\\VEN" -or 
+               $modelStr -match "NVMe|M\.2|PCIe|SN5\d\d|SN7\d\d|SN8\d\d|970\s*(?:EVO|PRO)|980|990|KC2500|KC3000|NM620|NM790|P3|P5|A2000|SX8200|S70|FireCuda|MP600|CS3030|VMD|Optane" -or
+               $interfaceStr -match "NVMe")
+
+    $isSSD = $isNVMe -or 
+             ($modelStr -match "SSD|SATA SSD|EVO|BX500|MX500|A400|SU650|QVO|870|860|SanDisk|Solid State" -or
+              $pnpStr -match "SSD|SOLID")
+
+    if ($isNVMe) { $isSSD = $true }
+
+    # Fallback to PhysicalDisk query if available
+    if (-not $isSSD) {
+        try {
+            $phys = Get-PhysicalDisk | Where-Object { $_.FriendlyName -eq $cDisk.Model }
+            if ($phys -and ($phys.MediaType -eq 'SSD' -or $phys.BusType -eq 'NVMe')) {
+                $isSSD = $true
+                if ($phys.BusType -eq 'NVMe') { $isNVMe = $true }
+            }
+        } catch {}
+    }
+
+    $driveTypeLabel = if ($isNVMe) { "NVMe M.2 SSD" } elseif ($isSSD) { "SATA SSD" } else { "HDD Mecânico" }
 
     $global:DiagnosticState.Storage = @{
         FreeGB = $diskFreeGB;
         TotalGB = $diskTotalGB;
         PercentFree = $diskPercentFree;
         IsSSD = $isSSD;
-        Model = $diskDrive.Model
+        IsNVMe = $isNVMe;
+        DriveType = $driveTypeLabel;
+        Model = $cDisk.Model
     }
 
     # 9. Disk Junk & Shaders Scan (Portable Dynamic Paths)
@@ -628,27 +671,29 @@ function Update-UpgradeAdvisorTab {
         })
     }
 
-    # Dynamic Rule: Storage (SSD vs HDD & Free Space)
-    if (-not $global:DiagnosticState.Storage.IsSSD) {
+    # Dynamic Rule: Storage (SSD vs HDD vs NVMe & Free Space)
+    $storageInfo = $global:DiagnosticState.Storage
+    if (-not $storageInfo.IsSSD) {
         $recs.Add([PSCustomObject]@{
             Titulo = "UPGRADE CRÍTICO: Migrar o Windows e Jogos para um SSD NVMe"
             Categoria = "O UPGRADE MAIS IMPORTANTE DESTE PC"
             Nivel = "danger"
-            Desc = "Seu sistema parece estar instalado em um disco mecânico tradicional (HDD). A troca por um SSD NVMe M.2 ou SATA reduzirá os tempos de carregamento em mais de 10x e acabará com travamentos de streaming de texturas."
+            Desc = "Seu sistema está instalado em um disco mecânico ($($storageInfo.Model)). A troca por um SSD NVMe M.2 ou SATA reduzirá os tempos de carregamento em mais de 10x e acabará com travamentos de streaming de texturas."
         })
-    } elseif ($global:DiagnosticState.Storage.PercentFree -lt 15) {
+    } elseif ($storageInfo.PercentFree -lt 15) {
         $recs.Add([PSCustomObject]@{
-            Titulo = "ALERTA DE ESPAÇO: Liberar Espaço no Drive C: ($($global:DiagnosticState.Storage.PercentFree)% livre)"
+            Titulo = "ALERTA DE ESPAÇO: Liberar Espaço no Drive C: ($($storageInfo.PercentFree)% livre)"
             Categoria = "PREVENÇÃO DE QUEDA DE DESEMPENHO NO SSD"
             Nivel = "danger"
-            Desc = "SSDs com menos de 15% de espaço livre sofrem com esgotamento de cache SLC, aumentando drasticamente o tempo de leitura e gravação."
+            Desc = "Seu $($storageInfo.DriveType) possui menos de 15% de espaço livre. SSDs muito cheios sofrem com esgotamento de cache SLC, aumentando drasticamente o tempo de leitura e gravação."
         })
     } else {
+        $nvmeLabel = if ($storageInfo.IsNVMe) { "SSD NVMe M.2 de Alta Velocidade" } else { "SSD SATA Rápido" }
         $recs.Add([PSCustomObject]@{
-            Titulo = "ARMAZENAMENTO: SSD Rápido com Folga ($($global:DiagnosticState.Storage.FreeGB) GB Livres)"
+            Titulo = "ARMAZENAMENTO: $nvmeLabel ($($storageInfo.FreeGB) GB Livres)"
             Categoria = "PONTO FORTE DO COMPUTADOR"
             Nivel = "success"
-            Desc = "Seu SSD possui $($global:DiagnosticState.Storage.PercentFree)% de espaço livre, garantindo taxas máximas de leitura e durabilidade ideal das células de memória."
+            Desc = "Disco do sistema ($($storageInfo.Model) - $($storageInfo.DriveType)) operando com $($storageInfo.PercentFree)% de espaço livre. Carregamentos instantâneos e cache em estado ideal."
         })
     }
 
