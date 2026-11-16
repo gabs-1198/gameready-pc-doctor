@@ -1,0 +1,5 @@
+# Windows temporários e logs
+*.log
+*.tmp
+thumbs.db
+desktop.ini
