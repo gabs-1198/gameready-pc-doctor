@@ -93,7 +93,11 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, Sys
                     </StackPanel>
                     <TextBlock Name="TxtSpecs" Text="Detectando componentes do hardware..." FontSize="13" Foreground="#94A3B8"/>
                 </StackPanel>
-                <Button Grid.Column="1" Name="BtnReescanear" Content="🔄 Reexaminar PC" Background="#2A3048" Width="150" Height="40"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Name="BtnRestauracao" Content="🛡️ Ponto de Restauração" Background="#334155" Margin="0,0,10,0" Height="40" Padding="12,8"/>
+                    <Button Name="BtnLaudo" Content="📄 Gerar Laudo Técnico" Background="#065F46" Margin="0,0,10,0" Height="40" Padding="12,8"/>
+                    <Button Name="BtnReescanear" Content="🔄 Reexaminar PC" Background="#2A3048" Width="135" Height="40"/>
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -216,13 +220,20 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, Sys
                         <Border Grid.Row="3" Grid.Column="1" Background="#1E2235" CornerRadius="12" Padding="18" Margin="10,0,0,0">
                             <StackPanel>
                                 <Grid Margin="0,0,0,10">
-                                    <TextBlock Text="🎮 Modo de Jogo &amp; Latência" FontSize="16" FontWeight="Bold" Foreground="White"/>
+                                    <TextBlock Text="🎮 Modo de Jogo &amp; Precisão 1:1" FontSize="16" FontWeight="Bold" Foreground="White"/>
                                     <Border Name="BadgeGameMode" HorizontalAlignment="Right" Background="#334155" CornerRadius="6" Padding="8,3">
                                         <TextBlock Name="TxtBadgeGameMode" Text="Checando..." FontSize="12" FontWeight="Bold" Foreground="White"/>
                                     </Border>
                                 </Grid>
-                                <TextBlock Name="TxtDescGameMode" Text="Verificando se o Modo de Jogo do Windows prioriza os núcleos da CPU..." TextWrapping="Wrap" Foreground="#94A3B8" FontSize="12" Margin="0,0,0,14" Height="42"/>
-                                <Button Name="BtnConfigGameMode" Content="🎮 Configurar Modo de Jogo" Background="#334155"/>
+                                <TextBlock Name="TxtDescGameMode" Text="Verificando se o Modo de Jogo está ativo e aceleração do mouse desativada..." TextWrapping="Wrap" Foreground="#94A3B8" FontSize="12" Margin="0,0,0,14" Height="42"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0" Name="BtnConfigGameMode" Content="🎮 Modo de Jogo" Background="#334155" Margin="0,0,5,0"/>
+                                    <Button Grid.Column="1" Name="BtnMouseFix" Content="🎯 Mira 1:1 (Mouse)" Background="#334155" Margin="5,0,0,0"/>
+                                </Grid>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -293,6 +304,8 @@ $window = [Windows.Markup.XamlReader]::Load($reader)
 # Element References
 $TxtSpecs = $window.FindName("TxtSpecs")
 $BtnReescanear = $window.FindName("BtnReescanear")
+$BtnRestauracao = $window.FindName("BtnRestauracao")
+$BtnLaudo = $window.FindName("BtnLaudo")
 
 # Card 1 Rebar
 $BadgeRebar = $window.FindName("BadgeRebar")
@@ -341,6 +354,7 @@ $BadgeGameMode = $window.FindName("BadgeGameMode")
 $TxtBadgeGameMode = $window.FindName("TxtBadgeGameMode")
 $TxtDescGameMode = $window.FindName("TxtDescGameMode")
 $BtnConfigGameMode = $window.FindName("BtnConfigGameMode")
+$BtnMouseFix = $window.FindName("BtnMouseFix")
 
 # Tab 2 Upgrade Advisor
 $TxtNivelHardware = $window.FindName("TxtNivelHardware")
@@ -418,6 +432,7 @@ function Run-AuditScan {
     $pcieWidth = 16
 
     # Method A: NVIDIA via nvidia-smi
+    $gpuTemp = $null
     if ($gpuVendor -eq "NVIDIA") {
         try {
             $nvidiaQuery = nvidia-smi -q 2>$null | Select-String -Pattern "BAR1 Memory Usage" -Context 0,2
@@ -437,6 +452,8 @@ function Run-AuditScan {
                     $pcieWidth = [int]$parts[1].Trim()
                 }
             }
+            $tRaw = nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>$null
+            if ($tRaw) { $gpuTemp = [math]::Round([double]$tRaw.Trim(), 0) }
         } catch {}
     }
 
@@ -461,8 +478,11 @@ function Run-AuditScan {
     $global:DiagnosticState.PcieGen = $pcieGen
     $global:DiagnosticState.PcieWidth = $pcieWidth
     $global:DiagnosticState.Cpu = @{ Name = $cpuName; Cores = $cpuCores; Threads = $cpuThreads }
-    $global:DiagnosticState.Gpu = @{ Name = $gpuName; Vendor = $gpuVendor; TechName = $rebarTechName; IsIntegrated = $isIntegratedGpu }
+    $global:DiagnosticState.Gpu = @{ Name = $gpuName; Vendor = $gpuVendor; TechName = $rebarTechName; IsIntegrated = $isIntegratedGpu; Temp = $gpuTemp }
     $global:DiagnosticState.Motherboard = $boardInfo
+
+    $tempStr = if ($gpuTemp) { " | Temp GPU: $gpuTemp °C" } else { "" }
+    $TxtSpecs.Text = "$cpuName | $gpuName$tempStr | Placa-Mãe: $boardInfo"
 
     if ($rebarActive) {
         $badgeText = if ($gpuVendor -eq "AMD") { "SAM ATIVADO" } else { "ATIVADO ($barTotal MiB)" }
@@ -718,10 +738,29 @@ function Run-AuditScan {
         if ($null -ne $gmVal -and $gmVal -eq 0) { $gameModeActive = $false }
     } catch {}
 
+    # Mouse Acceleration & Input Lag Check
+    $mouseAccelOff = $true
+    try {
+        $mSpeed = (Get-ItemProperty -Path 'HKCU:\Control Panel\Mouse' -Name 'MouseSpeed' -ErrorAction SilentlyContinue).MouseSpeed
+        if ($mSpeed -and $mSpeed -ne "0") { $mouseAccelOff = $false }
+    } catch {}
+
+    $hagsActive = $false
+    try {
+        $hVal = (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers' -Name 'HwSchMode' -ErrorAction SilentlyContinue).HwSchMode
+        if ($hVal -eq 2) { $hagsActive = $true }
+    } catch {}
+
     $global:DiagnosticState.GameMode = $gameModeActive
-    if ($gameModeActive) {
-        Set-BadgeColor $BadgeGameMode $TxtBadgeGameMode "ATIVADO" "success"
-        $TxtDescGameMode.Text = "O Windows prioriza processos de jogos e desativa tarefas secundárias durante a gameplay."
+    $global:DiagnosticState.MouseAccelOff = $mouseAccelOff
+    $global:DiagnosticState.HAGS = $hagsActive
+
+    if ($gameModeActive -and $mouseAccelOff) {
+        Set-BadgeColor $BadgeGameMode $TxtBadgeGameMode "OTIMIZADO" "success"
+        $TxtDescGameMode.Text = "Modo de Jogo ativo e mira 1:1 calibrada sem aceleração artificial no ponteiro."
+    } elseif ($gameModeActive) {
+        Set-BadgeColor $BadgeGameMode $TxtBadgeGameMode "MIRA ACELERADA" "warning"
+        $TxtDescGameMode.Text = "Modo de Jogo ativo, mas a aceleração do mouse está ligada. Clique em 'Mira 1:1' para desligar."
     } else {
         Set-BadgeColor $BadgeGameMode $TxtBadgeGameMode "DESATIVADO" "warning"
         $TxtDescGameMode.Text = "O Modo de Jogo está desligado. Recomenda-se ativar para garantir prioridade de CPU para os jogos."
@@ -906,6 +945,41 @@ function Update-UpgradeAdvisorTab {
         })
     }
 
+    # Dynamic Rule: GPU Thermal Health
+    $gTemp = $global:DiagnosticState.Gpu.Temp
+    if ($gTemp -and $gTemp -ge 75) {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "ALERTA TÉRMICO CRÍTICO: GPU Operando a $gTemp °C"
+            Categoria = "MANUTENÇÃO FÍSICA URGENTE"
+            Nivel = "danger"
+            Desc = "Sua placa de vídeo está a $gTemp °C em repouso/carga leve. Superaquecimento causa Thermal Throttling severo (queda abrupta de FPS). Realize limpeza física de poeira e substituição da pasta térmica."
+        })
+    } elseif ($gTemp -and $gTemp -ge 60) {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "AVISO TÉRMICO: Temperatura da GPU Elevada ($gTemp °C em Repouso)"
+            Categoria = "MANUTENÇÃO RECOMENDADA"
+            Nivel = "warning"
+            Desc = "A placa de vídeo está com temperatura moderadamente alta em repouso ($gTemp °C). Verifique o fluxo de ar do gabinete e a rotação dos coolers."
+        })
+    } elseif ($gTemp) {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "SAÚDE TÉRMICA: Temperatura Normal da GPU ($gTemp °C)"
+            Categoria = "PONTO FORTE DO COMPUTADOR"
+            Nivel = "success"
+            Desc = "A placa de vídeo opera em faixa térmica segura e refrigerada, sem risco de thermal throttling."
+        })
+    }
+
+    # Dynamic Rule: Mouse Acceleration (Input Lag)
+    if (-not $global:DiagnosticState.MouseAccelOff) {
+        $recs.Add([PSCustomObject]@{
+            Titulo = "PRECISÃO DE MIRA: Aceleração do Mouse Ativada"
+            Categoria = "CONFIGURAÇÃO COMPETITIVA RECOMENDADA"
+            Nivel = "warning"
+            Desc = "O recurso 'Aprimorar precisão do ponteiro' do Windows altera a distância percorrida pelo cursor com base na velocidade do movimento. Em jogos competitivos (CS2, Valorant), desligá-lo garante mira 1:1 consistente."
+        })
+    }
+
     # Render Recommendations Cards
     foreach ($r in $recs) {
         $card = New-Object Windows.Controls.Border
@@ -996,7 +1070,7 @@ function Update-UpgradeAdvisorTab {
 # Function: Populate Tab 3 (Checklist de Sucesso)
 function Update-ChecklistTab {
     $ContainerChecklist.Children.Clear()
-    $totalChecks = 6
+    $totalChecks = 7
     $scoreCount = 0
 
     $items = @(
@@ -1035,6 +1109,12 @@ function Update-ChecklistTab {
             Success = (-not $global:DiagnosticState.Monitor.IsThrottled)
             SuccessDesc = "OTIMIZADO - Monitor operando na taxa máxima ($($global:DiagnosticState.Monitor.CurrentHz) Hz)."
             FailDesc = "TRAVADO - Monitor suporta $($global:DiagnosticState.Monitor.MaxHz) Hz mas está em $($global:DiagnosticState.Monitor.CurrentHz) Hz."
+        },
+        @{
+            Name = "Modo de Jogo & Precisão de Entrada (Latência)"
+            Success = ($global:DiagnosticState.GameMode -and $global:DiagnosticState.MouseAccelOff)
+            SuccessDesc = "OTIMIZADO - Modo de Jogo ativo e aceleração de ponteiro desligada (mira 1:1)."
+            FailDesc = "AJUSTAR - Modo de Jogo desligado ou aceleração do mouse distorcendo a mira."
         }
     )
 
@@ -1253,6 +1333,191 @@ $BtnAjustarMonitor.Add_Click({
 # Button: Abrir Configurações de Modo de Jogo
 $BtnConfigGameMode.Add_Click({
     Start-Process "ms-settings:gaming-gamemode"
+})
+
+# Button: Desativar Aceleração do Mouse (Mira 1:1)
+$BtnMouseFix.Add_Click({
+    try {
+        Set-ItemProperty -Path 'HKCU:\Control Panel\Mouse' -Name 'MouseSpeed' -Value "0"
+        Set-ItemProperty -Path 'HKCU:\Control Panel\Mouse' -Name 'MouseThreshold1' -Value "0"
+        Set-ItemProperty -Path 'HKCU:\Control Panel\Mouse' -Name 'MouseThreshold2' -Value "0"
+        [System.Windows.MessageBox]::Show(
+            "Aceleração do mouse ('Aprimorar precisão do ponteiro') desativada com sucesso!`n`nSua mira agora está em escala 1:1 nativa (raw input).`nNota: Pode ser necessário reiniciar ou fazer logoff para alguns jogos lerem a nova sensibilidade.",
+            "Mira 1:1 Calibrada",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Information
+        )
+        Run-AuditScan
+    } catch {
+        [System.Windows.MessageBox]::Show("Erro ao alterar configurações do mouse: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+    }
+})
+
+# Button: Criar Ponto de Restauração do Windows
+$BtnRestauracao.Add_Click({
+    try {
+        $confirm = [System.Windows.MessageBox]::Show(
+            "Deseja criar um Ponto de Restauração do Windows agora?`n`nIsso cria uma imagem segura do sistema para você poder reverter qualquer alteração com total segurança.",
+            "Ponto de Restauração",
+            [System.Windows.MessageBoxButton]::YesNo,
+            [System.Windows.MessageBoxImage]::Question
+        )
+        if ($confirm -eq [System.Windows.MessageBoxResult]::Yes) {
+            Enable-ComputerRestore -Drive "C:\" -ErrorAction SilentlyContinue
+            Checkpoint-Computer -Description "GameReady Doctor Backup" -RestorePointType "MODIFY_SETTINGS" -ErrorAction Stop
+            [System.Windows.MessageBox]::Show("Ponto de Restauração criado com sucesso no Windows!", "Backup Seguro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+        }
+    } catch {
+        [System.Windows.MessageBox]::Show("Não foi possível criar o Ponto de Restauração: $_`n`nVerifique se a 'Proteção do Sistema' está ativada nas propriedades do Windows.", "Aviso", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
+    }
+})
+
+# Button: Gerar Laudo Técnico do PC (HTML / PDF)
+$BtnLaudo.Add_Click({
+    try {
+        $diag = $global:DiagnosticState
+        $dateStr = Get-Date -Format 'dd/MM/yyyy HH:mm:ss'
+        $compName = $env:COMPUTERNAME
+        $userName = $env:USERNAME
+        $osCaption = (Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue).Caption
+
+        $rebarStatus = if ($diag.Rebar) { "ATIVADO ($($diag.BarTotal) MiB)" } else { "DESATIVADO" }
+        $vbsStatus = if (-not $diag.VBS) { "DESATIVADO (Otimizado)" } else { "ATIVADO (Penalidade CPU)" }
+        $ramStatus = "$($diag.RAM.Cap) GB @ $($diag.RAM.Speed) MHz " + (if ($diag.RAM.Dual) { "(Dual Channel)" } else { "(Single Channel)" })
+        $powerStatus = if ($diag.Power) { "Desempenho Máximo" } else { "Equilibrado / Padrão" }
+        $storageStatus = "$($diag.Storage.Model) ($($diag.Storage.DriveType)) - $($diag.Storage.FreeGB) GB livres ($($diag.Storage.PercentFree)%)"
+        $monitorStatus = "$($diag.Monitor.CurrentHz) Hz ($($diag.Monitor.ResX)x$($diag.Monitor.ResY))" + (if ($diag.Monitor.IsThrottled) { " [Gargalo: suporta $($diag.Monitor.MaxHz) Hz]" } else { " [Taxa Máxima]" })
+        $gameModeStatus = if ($diag.GameMode) { "Ativado" } else { "Desativado" }
+        $mouseStatus = if ($diag.MouseAccelOff) { "Desativada (Mira 1:1)" } else { "Ativada (Ponteiro Acelerado)" }
+        $tempStatus = if ($diag.Gpu.Temp) { "$($diag.Gpu.Temp) °C" } else { "N/A" }
+
+        $html = @"
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Laudo Técnico de Hardware &amp; Auditoria Gamer - $compName</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #0F111A; color: #ECEFF4; margin: 0; padding: 30px; }
+        .container { max-width: 900px; margin: 0 auto; background: #1E2235; padding: 35px; border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #334155; padding-bottom: 20px; margin-bottom: 25px; }
+        h1 { margin: 0; font-size: 24px; color: #38BDF8; }
+        .sub { color: #94A3B8; font-size: 13px; margin-top: 5px; }
+        .print-btn { background: #10B981; color: #042F2E; border: none; padding: 10px 20px; font-weight: bold; font-size: 14px; border-radius: 8px; cursor: pointer; }
+        .section-title { font-size: 17px; font-weight: bold; color: #38BDF8; margin-top: 25px; margin-bottom: 12px; border-left: 4px solid #38BDF8; padding-left: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #334155; font-size: 13px; }
+        th { background: #2A3048; color: #F8FAFC; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 11px; }
+        .badge-success { background: #065F46; color: #34D399; }
+        .badge-warning { background: #78350F; color: #FCD34D; }
+        .badge-danger { background: #7F1D1D; color: #FCA5A5; }
+        .footer { margin-top: 35px; padding-top: 20px; border-top: 1px solid #334155; text-align: center; color: #64748B; font-size: 12px; }
+        @media print {
+            body { background: white; color: #1E293B; padding: 0; }
+            .container { background: white; box-shadow: none; padding: 15px; max-width: 100%; }
+            .print-btn { display: none; }
+            h1 { color: #0284C7; }
+            th { background: #F1F5F9; color: #0F172A; }
+            th, td { border-bottom: 1px solid #E2E8F0; }
+            .badge-success { background: #DCFCE7; color: #166534; }
+            .badge-warning { background: #FEF3C7; color: #92400E; }
+            .badge-danger { background: #FEE2E2; color: #991B1B; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>⚡ Laudo Técnico de Otimização e Hardware</h1>
+                <div class="sub">Auditoria Profissional GameReady PC Doctor | Técnico: Gabriel Lopes</div>
+            </div>
+            <button class="print-btn" onclick="window.print()">🖨️ Imprimir / Salvar em PDF</button>
+        </div>
+
+        <div class="section-title">💻 Identificação do Equipamento</div>
+        <table>
+            <tr><th width="30%">Computador / Host</th><td>$compName</td></tr>
+            <tr><th>Usuário</th><td>$userName</td></tr>
+            <tr><th>Sistema Operacional</th><td>$osCaption</td></tr>
+            <tr><th>Data da Auditoria</th><td>$dateStr</td></tr>
+        </table>
+
+        <div class="section-title">⚙️ Inventário de Hardware</div>
+        <table>
+            <tr><th width="30%">Processador (CPU)</th><td>$($diag.Cpu.Name) ($($diag.Cpu.Cores) Núcleos / $($diag.Cpu.Threads) Threads)</td></tr>
+            <tr><th>Placa de Vídeo (GPU)</th><td>$($diag.Gpu.Name) (Temp em Repouso: $tempStatus)</td></tr>
+            <tr><th>Placa-Mãe</th><td>$($diag.Motherboard)</td></tr>
+            <tr><th>Memória RAM</th><td>$ramStatus</td></tr>
+            <tr><th>Disco do Sistema (C:)</th><td>$storageStatus</td></tr>
+            <tr><th>Monitor &amp; Resolução</th><td>$monitorStatus</td></tr>
+        </table>
+
+        <div class="section-title">📊 Auditoria dos 7 Pilares de Performance</div>
+        <table>
+            <tr>
+                <th width="35%">Item Auditado</th>
+                <th width="25%">Status</th>
+                <th>Diagnóstico Técnico</th>
+            </tr>
+            <tr>
+                <td><b>Resizable BAR / AMD SAM</b></td>
+                <td><span class="badge $(if ($diag.Rebar) { 'badge-success' } else { 'badge-danger' })">$rebarStatus</span></td>
+                <td>$(if ($diag.Rebar) { 'Acesso direto à VRAM liberado sem gargalo.' } else { 'VRAM limitada a blocos de 256MB. Ativar na BIOS.' })</td>
+            </tr>
+            <tr>
+                <td><b>Isolamento de Núcleo (VBS)</b></td>
+                <td><span class="badge $(if (-not $diag.VBS) { 'badge-success' } else { 'badge-warning' })">$vbsStatus</span></td>
+                <td>$(if (-not $diag.VBS) { 'Sem sobrecarga de virtualização na CPU.' } else { 'Camada de virtualização consumindo de 3% a 8% da CPU.' })</td>
+            </tr>
+            <tr>
+                <td><b>Memória RAM (Canais &amp; Velocidade)</b></td>
+                <td><span class="badge $(if ($diag.RAM.Dual -and $diag.RAM.Speed -ge 3000) { 'badge-success' } else { 'badge-warning' })">$(if ($diag.RAM.Dual) { 'Dual Channel' } else { 'Single Channel' })</span></td>
+                <td>$ramStatus</td>
+            </tr>
+            <tr>
+                <td><b>Plano de Energia</b></td>
+                <td><span class="badge $(if ($diag.Power) { 'badge-success' } else { 'badge-warning' })">$powerStatus</span></td>
+                <td>$(if ($diag.Power) { 'Clocks sem atraso de transição.' } else { 'Plano com economia de energia ativa.' })</td>
+            </tr>
+            <tr>
+                <td><b>Caches de Shaders do SSD</b></td>
+                <td><span class="badge $(if ($diag.JunkMB -lt 5000) { 'badge-success' } else { 'badge-danger' })">$($diag.JunkMB) MB</span></td>
+                <td>$(if ($diag.JunkMB -lt 5000) { 'SSD limpo sem acúmulo excessivo.' } else { 'Recomendada limpeza de shaders obsoletos.' })</td>
+            </tr>
+            <tr>
+                <td><b>Taxa de Atualização do Monitor</b></td>
+                <td><span class="badge $(if (-not $diag.Monitor.IsThrottled) { 'badge-success' } else { 'badge-danger' })">$($diag.Monitor.CurrentHz) Hz</span></td>
+                <td>$(if (-not $diag.Monitor.IsThrottled) { 'Taxa máxima configurada.' } else { 'Monitor de ' + $diag.Monitor.MaxHz + ' Hz travado em 60 Hz.' })</td>
+            </tr>
+            <tr>
+                <td><b>Modo de Jogo &amp; Precisão do Mouse</b></td>
+                <td><span class="badge $(if ($diag.GameMode -and $diag.MouseAccelOff) { 'badge-success' } else { 'badge-warning' })">$(if ($diag.GameMode -and $diag.MouseAccelOff) { 'Otimizado' } else { 'Pendente' })</span></td>
+                <td>Modo de Jogo: $gameModeStatus | Aceleração: $mouseStatus</td>
+            </tr>
+        </table>
+
+        <div class="footer">
+            Laudo gerado automaticamente pelo GameReady PC Doctor. Desenvolvido por Gabriel Lopes.
+        </div>
+    </div>
+</body>
+</html>
+"@
+
+        $reportPath = Join-Path $env:TEMP "Laudo_Tecnico_PC_$($compName)_$((Get-Date).ToString('yyyyMMdd_HHmmss')).html"
+        $html | Out-File -FilePath $reportPath -Encoding utf8
+        Start-Process $reportPath
+        [System.Windows.MessageBox]::Show(
+            "Laudo Técnico gerado com sucesso e aberto no seu navegador!`n`nArquivo salvo em:`n$reportPath`n`nVocê pode imprimi-lo ou salvá-lo em PDF diretamente pelo navegador.",
+            "Laudo Técnico Gerado",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Information
+        )
+    } catch {
+        [System.Windows.MessageBox]::Show("Erro ao gerar o laudo técnico: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+    }
 })
 
 # Initial Scan on launch
