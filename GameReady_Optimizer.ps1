@@ -390,6 +390,119 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, Sys
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
+
+            <!-- TAB 5: REDE & PING GAMER -->
+            <TabItem Header="🌐 Rede &amp; Ping Gamer">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,15,0,0">
+                    <StackPanel>
+                        <!-- Top Header Banner for Network -->
+                        <Border Background="#1E2235" CornerRadius="12" Padding="20" Margin="0,0,0,18">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <TextBlock Text="🌐 Otimização de Rede &amp; Latência Competitiva" FontSize="18" FontWeight="Bold" Foreground="#38BDF8"/>
+                                        <Border Background="#6366F1" CornerRadius="6" Padding="8,2" Margin="10,2,0,2">
+                                            <TextBlock Text="PING &amp; TCP/IP" FontSize="11" FontWeight="Bold" Foreground="White"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Name="TxtNetworkOverall" Text="Analisando parâmetros de rede, DNS e latência do protocolo TCP/IP..." FontSize="13" Foreground="#94A3B8"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" Name="BadgeNetworkOverall" Background="#10B981" CornerRadius="8" Padding="16,8">
+                                    <TextBlock Name="TxtBadgeNetworkOverall" Text="REDE OTIMIZADA" FontSize="13" FontWeight="Bold" Foreground="#042F2E"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- Network Grid Cards -->
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Card 1: Algoritmo de Nagle (TcpAckFrequency & TCPNoDelay) -->
+                            <Border Grid.Row="0" Grid.Column="0" Background="#1E2235" CornerRadius="12" Padding="18" Margin="0,0,10,14">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,10">
+                                        <TextBlock Text="⚡ Algoritmo de Nagle (Atraso de Pacotes)" FontSize="15" FontWeight="Bold" Foreground="White"/>
+                                        <Border Name="BadgeNagle" HorizontalAlignment="Right" Background="#334155" CornerRadius="6" Padding="8,3">
+                                            <TextBlock Name="TxtBadgeNagle" Text="Checando..." FontSize="12" FontWeight="Bold" Foreground="White"/>
+                                        </Border>
+                                    </Grid>
+                                    <TextBlock Name="TxtDescNagle" Text="O Windows agrupa pequenos pacotes por padrão. Desativar força o envio imediato, eliminando atrasos de comando nos jogos." TextWrapping="Wrap" Foreground="#94A3B8" FontSize="12" Margin="0,0,0,14" Height="42"/>
+                                    <Button Name="BtnFixNagle" Content="⚡ Desativar Algoritmo de Nagle (1 Clique)" Background="#10B981"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Card 2: Throttling de Rede (SystemProfile) -->
+                            <Border Grid.Row="0" Grid.Column="1" Background="#1E2235" CornerRadius="12" Padding="18" Margin="10,0,0,14">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,10">
+                                        <TextBlock Text="🚀 Throttling de Rede (Network Throttling)" FontSize="15" FontWeight="Bold" Foreground="White"/>
+                                        <Border Name="BadgeThrottling" HorizontalAlignment="Right" Background="#334155" CornerRadius="6" Padding="8,3">
+                                            <TextBlock Name="TxtBadgeThrottling" Text="Checando..." FontSize="12" FontWeight="Bold" Foreground="White"/>
+                                        </Border>
+                                    </Grid>
+                                    <TextBlock Name="TxtDescThrottling" Text="O Windows limita tráfego não-multimídia a 10 pacotes/ms para economizar CPU. Desativar libera 100% da banda da placa de rede." TextWrapping="Wrap" Foreground="#94A3B8" FontSize="12" Margin="0,0,0,14" Height="42"/>
+                                    <Button Name="BtnFixThrottling" Content="⚡ Liberar Tráfego Total de Rede" Background="#10B981"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Card 3: DNS Gamer de Baixa Latência -->
+                            <Border Grid.Row="1" Grid.Column="0" Background="#1E2235" CornerRadius="12" Padding="18" Margin="0,0,10,0">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,10">
+                                        <TextBlock Text="🌍 DNS Gamer de Alta Performance" FontSize="15" FontWeight="Bold" Foreground="White"/>
+                                        <Border Name="BadgeDns" HorizontalAlignment="Right" Background="#334155" CornerRadius="6" Padding="8,3">
+                                            <TextBlock Name="TxtBadgeDns" Text="Checando..." FontSize="12" FontWeight="Bold" Foreground="White"/>
+                                        </Border>
+                                    </Grid>
+                                    <TextBlock Name="TxtDescDns" Text="Servidores DNS otimizados reduzem o tempo de busca de servidores de jogos e evitam rotas congestionadas de operadoras." TextWrapping="Wrap" Foreground="#94A3B8" FontSize="12" Margin="0,0,0,14" Height="42"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0" Name="BtnApplyCloudflareDns" Content="Cloudflare (1.1.1.1)" Background="#6366F1" Margin="0,0,4,0"/>
+                                        <Button Grid.Column="1" Name="BtnApplyGoogleDns" Content="Google (8.8.8.8)" Background="#3B82F6" Margin="2,0,2,0"/>
+                                        <Button Grid.Column="2" Name="BtnApplyDhcpDns" Content="Padrão (DHCP)" Background="#334155" Margin="4,0,0,0"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Card 4: Diagnóstico de Ping & Limpeza de Cache -->
+                            <Border Grid.Row="1" Grid.Column="1" Background="#1E2235" CornerRadius="12" Padding="18" Margin="10,0,0,0">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,10">
+                                        <TextBlock Text="📡 Diagnóstico de Latência &amp; Flush DNS" FontSize="15" FontWeight="Bold" Foreground="White"/>
+                                        <Border Name="BadgePing" HorizontalAlignment="Right" Background="#334155" CornerRadius="6" Padding="8,3">
+                                            <TextBlock Name="TxtBadgePing" Text="-- ms" FontSize="12" FontWeight="Bold" Foreground="White"/>
+                                        </Border>
+                                    </Grid>
+                                    <TextBlock Name="TxtDescPing" Text="Meça o ping em tempo real e limpe o cache DNS local e as rotas de socket acumuladas pelo Windows para resolver engasgos de conexão." TextWrapping="Wrap" Foreground="#94A3B8" FontSize="12" Margin="0,0,0,14" Height="42"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0" Name="BtnTestPing" Content="🎯 Testar Ping ao Vivo" Background="#10B981" Margin="0,0,5,0"/>
+                                        <Button Grid.Column="1" Name="BtnFlushDns" Content="🧹 Flush DNS &amp; Reset" Background="#334155" Margin="5,0,0,0"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
         </TabControl>
     </Grid>
 </Window>
@@ -485,6 +598,30 @@ $BadgeTestSigning = $window.FindName("BadgeTestSigning")
 $TxtBadgeTestSigning = $window.FindName("TxtBadgeTestSigning")
 $TxtDescTestSigning = $window.FindName("TxtDescTestSigning")
 $BtnFixIntegrity = $window.FindName("BtnFixIntegrity")
+
+# Tab 5 Rede & Ping Gamer
+$TxtNetworkOverall = $window.FindName("TxtNetworkOverall")
+$BadgeNetworkOverall = $window.FindName("BadgeNetworkOverall")
+$TxtBadgeNetworkOverall = $window.FindName("TxtBadgeNetworkOverall")
+$BadgeNagle = $window.FindName("BadgeNagle")
+$TxtBadgeNagle = $window.FindName("TxtBadgeNagle")
+$TxtDescNagle = $window.FindName("TxtDescNagle")
+$BtnFixNagle = $window.FindName("BtnFixNagle")
+$BadgeThrottling = $window.FindName("BadgeThrottling")
+$TxtBadgeThrottling = $window.FindName("TxtBadgeThrottling")
+$TxtDescThrottling = $window.FindName("TxtDescThrottling")
+$BtnFixThrottling = $window.FindName("BtnFixThrottling")
+$BadgeDns = $window.FindName("BadgeDns")
+$TxtBadgeDns = $window.FindName("TxtBadgeDns")
+$TxtDescDns = $window.FindName("TxtDescDns")
+$BtnApplyCloudflareDns = $window.FindName("BtnApplyCloudflareDns")
+$BtnApplyGoogleDns = $window.FindName("BtnApplyGoogleDns")
+$BtnApplyDhcpDns = $window.FindName("BtnApplyDhcpDns")
+$BadgePing = $window.FindName("BadgePing")
+$TxtBadgePing = $window.FindName("TxtBadgePing")
+$TxtDescPing = $window.FindName("TxtDescPing")
+$BtnTestPing = $window.FindName("BtnTestPing")
+$BtnFlushDns = $window.FindName("BtnFlushDns")
 
 # Helper function to set badge colors
 function Set-BadgeColor($badge, $textBlock, $text, $type) {
@@ -892,6 +1029,9 @@ function Run-AuditScan {
 
     # Update Tab 4: Riot Vanguard & Valorant Doctor
     Update-VanguardTab
+
+    # Update Tab 5: Rede & Ping Gamer
+    Update-NetworkTab
 }
 
 # Function: Populate Tab 2 (Consultor de Upgrades & Avaliação Individual)
@@ -1473,6 +1613,113 @@ function Update-VanguardTab {
     }
 }
 
+# Function: Populate Tab 5 (Rede & Ping Gamer)
+function Update-NetworkTab {
+    # 1. Identify active network adapter
+    $activeAdapter = Get-CimInstance Win32_NetworkAdapterConfiguration -ErrorAction SilentlyContinue | Where-Object { $_.IPEnabled -eq $true } | Select-Object -First 1
+
+    # 2. Check Nagle's Algorithm (TcpAckFrequency & TCPNoDelay)
+    $isNagleDisabled = $false
+    if ($activeAdapter -and $activeAdapter.SettingID) {
+        $tcpPath = "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\$($activeAdapter.SettingID)"
+        $ackFreq = (Get-ItemProperty -Path $tcpPath -Name "TcpAckFrequency" -ErrorAction SilentlyContinue).TcpAckFrequency
+        $noDelay = (Get-ItemProperty -Path $tcpPath -Name "TCPNoDelay" -ErrorAction SilentlyContinue).TCPNoDelay
+        if ($ackFreq -eq 1 -and $noDelay -eq 1) {
+            $isNagleDisabled = $true
+        }
+    }
+
+    # 3. Check Network Throttling Index & System Responsiveness
+    $isThrottlingDisabled = $false
+    $profilePath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile"
+    $throttleVal = (Get-ItemProperty -Path $profilePath -Name "NetworkThrottlingIndex" -ErrorAction SilentlyContinue).NetworkThrottlingIndex
+    if ($null -ne $throttleVal -and ($throttleVal -eq -1 -or [int64]$throttleVal -eq 4294967295 -or "$throttleVal" -eq "4294967295")) {
+        $isThrottlingDisabled = $true
+    }
+
+    # 4. Check DNS Configuration
+    $dnsType = "PADRÃO / OPERADORA"
+    $dnsStr = ""
+    $isDnsOptimized = $false
+    if ($activeAdapter -and $activeAdapter.DNSServerSearchOrder) {
+        $dnsStr = $activeAdapter.DNSServerSearchOrder -join ", "
+        if ($dnsStr -match "1\.1\.1\.1") {
+            $dnsType = "CLOUDFLARE (1.1.1.1)"
+            $isDnsOptimized = $true
+        } elseif ($dnsStr -match "8\.8\.8\.8") {
+            $dnsType = "GOOGLE (8.8.8.8)"
+            $isDnsOptimized = $true
+        } else {
+            $dnsType = "PERSONALIZADO"
+        }
+    } else {
+        $dnsType = "AUTOMÁTICO (DHCP)"
+    }
+
+    # Save state
+    $global:DiagnosticState.Network = @{
+        AdapterName = if ($activeAdapter) { $activeAdapter.Description } else { "Nenhum adaptador ativo" }
+        SettingID = if ($activeAdapter) { $activeAdapter.SettingID } else { $null }
+        NagleDisabled = $isNagleDisabled
+        ThrottlingDisabled = $isThrottlingDisabled
+        DnsType = $dnsType
+        DnsServers = $dnsStr
+        IsDnsOptimized = $isDnsOptimized
+    }
+
+    # Update UI - Nagle
+    if ($isNagleDisabled) {
+        Set-BadgeColor $BadgeNagle $TxtBadgeNagle "DESATIVADO (SEM DELAY)" "success"
+        $TxtDescNagle.Text = "Excelente! Algoritmo de Nagle desativado (TcpAckFrequency=1 / TCPNoDelay=1). Pacotes TCP de jogos são enviados imediatamente sem agrupamento."
+        $BtnFixNagle.IsEnabled = $false
+        $BtnFixNagle.Content = "✅ Nagle Desativado (Zero Delay)"
+        $BtnFixNagle.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#334155")
+    } else {
+        Set-BadgeColor $BadgeNagle $TxtBadgeNagle "PADRÃO (ATRASO ATIVO)" "warning"
+        $TxtDescNagle.Text = "O Windows está retendo e acumulando pequenos pacotes para poupar tráfego. Isso adiciona de 10 a 20ms de latência e micro-delays em jogos online."
+        $BtnFixNagle.IsEnabled = $true
+        $BtnFixNagle.Content = "⚡ Desativar Algoritmo de Nagle (1 Clique)"
+        $BtnFixNagle.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#10B981")
+    }
+
+    # Update UI - Throttling
+    if ($isThrottlingDisabled) {
+        Set-BadgeColor $BadgeThrottling $TxtBadgeThrottling "LIBERADO (MÁXIMO)" "success"
+        $TxtDescThrottling.Text = "Excelente! O limitador de pacotes do Windows está desativado (NetworkThrottlingIndex=Disabled). Tráfego total liberado para jogos."
+        $BtnFixThrottling.IsEnabled = $false
+        $BtnFixThrottling.Content = "✅ Tráfego 100% Liberado"
+        $BtnFixThrottling.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#334155")
+    } else {
+        Set-BadgeColor $BadgeThrottling $TxtBadgeThrottling "LIMITADO (10 pct/ms)" "warning"
+        $TxtDescThrottling.Text = "O Windows limita pacotes não-multimídia a 10 pacotes por milissegundo para economizar CPU. Desativar libera fluxo total."
+        $BtnFixThrottling.IsEnabled = $true
+        $BtnFixThrottling.Content = "⚡ Desativar Throttling de Rede (1 Clique)"
+        $BtnFixThrottling.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#10B981")
+    }
+
+    # Update UI - DNS
+    if ($isDnsOptimized) {
+        Set-BadgeColor $BadgeDns $TxtBadgeDns $dnsType "success"
+        $TxtDescDns.Text = "Conexão utilizando DNS gamer de baixa latência e alta privacidade ($dnsStr). Resolução de endereços em rotas otimizadas."
+    } else {
+        Set-BadgeColor $BadgeDns $TxtBadgeDns $dnsType "warning"
+        $TxtDescDns.Text = "Seu computador está utilizando DNS padrão/operadora ($dnsStr). Aplicar Cloudflare (1.1.1.1) ou Google (8.8.8.8) reduz o tempo de busca e melhora o ping."
+    }
+
+    # Network Overall Status
+    if ($isNagleDisabled -and $isThrottlingDisabled -and $isDnsOptimized) {
+        $TxtNetworkOverall.Text = "Sua rede está com todos os parâmetros de baixa latência aplicados! Sem atraso de Nagle, sem throttling e com DNS gamer."
+        $BadgeNetworkOverall.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#065F46")
+        $TxtBadgeNetworkOverall.Text = "100% OTIMIZADA PARA JOGOS"
+        $TxtBadgeNetworkOverall.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#34D399")
+    } else {
+        $TxtNetworkOverall.Text = "Parâmetros padrão do Windows estão limitando a sua rede. Clique nos botões abaixo para otimizar pacotes e reduzir seu ping!"
+        $BadgeNetworkOverall.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#78350F")
+        $TxtBadgeNetworkOverall.Text = "LATÊNCIA PADRÃO / OTIMIZÁVEL"
+        $TxtBadgeNetworkOverall.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#FBBF24")
+    }
+}
+
 # EVENT HANDLERS
 
 # Button: Reexaminar PC
@@ -1713,6 +1960,179 @@ Ao reiniciar no Windows, o Secure Boot estará ativo e o Valorant abrirá normal
 "@, "Guia de Ativação do Secure Boot", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
 })
 
+# TAB 5 EVENT HANDLERS: REDE & PING GAMER
+
+# Button: Desativar Algoritmo de Nagle
+$BtnFixNagle.Add_Click({
+    try {
+        $adapter = Get-CimInstance Win32_NetworkAdapterConfiguration -ErrorAction SilentlyContinue | Where-Object { $_.IPEnabled -eq $true } | Select-Object -First 1
+        if (-not $adapter -or -not $adapter.SettingID) {
+            [System.Windows.MessageBox]::Show("Nenhum adaptador de rede ativo encontrado.", "Aviso", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
+            return
+        }
+        $tcpPath = "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\$($adapter.SettingID)"
+        Set-ItemProperty -Path $tcpPath -Name "TcpAckFrequency" -Value 1 -Type DWord
+        Set-ItemProperty -Path $tcpPath -Name "TCPNoDelay" -Value 1 -Type DWord
+        [System.Windows.MessageBox]::Show(
+            "Algoritmo de Nagle desativado com sucesso para '$($adapter.Description)'!`n`n• TcpAckFrequency = 1 (Confirmação imediata sem espera)`n• TCPNoDelay = 1 (Envio imediato sem agrupamento de pacotes)`n`nSeus disparos e ações em jogos online competitivos agora têm transmissão direta sem micro-atrasos.",
+            "Latência TCP Otimizada",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Information
+        )
+        Run-AuditScan
+    } catch {
+        [System.Windows.MessageBox]::Show("Erro ao configurar parâmetros TCP: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+    }
+})
+
+# Button: Liberar Throttling de Rede do Windows
+$BtnFixThrottling.Add_Click({
+    try {
+        $profilePath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile"
+        Set-ItemProperty -Path $profilePath -Name "NetworkThrottlingIndex" -Value 0xFFFFFFFF -Type DWord
+        Set-ItemProperty -Path $profilePath -Name "SystemResponsiveness" -Value 0 -Type DWord
+        [System.Windows.MessageBox]::Show(
+            "Throttling de rede do Windows desativado com sucesso!`n`n• NetworkThrottlingIndex = Desativado (Fluxo de rede 100% livre)`n• SystemResponsiveness = 0 (Prioridade total para jogos em primeiro plano)`n`nIsso previne gargalos de pacotes e melhora a consistência da taxa de dados.",
+            "Tráfego de Rede Liberado",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Information
+        )
+        Run-AuditScan
+    } catch {
+        [System.Windows.MessageBox]::Show("Erro ao configurar parâmetros do SystemProfile: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+    }
+})
+
+# Button: Aplicar DNS Cloudflare (1.1.1.1)
+$BtnApplyCloudflareDns.Add_Click({
+    try {
+        $adapter = Get-CimInstance Win32_NetworkAdapterConfiguration -ErrorAction SilentlyContinue | Where-Object { $_.IPEnabled -eq $true } | Select-Object -First 1
+        if ($adapter) {
+            Invoke-CimMethod -InputObject $adapter -MethodName SetDNSServerSearchOrder -Arguments @{ DNSServerSearchOrder = @('1.1.1.1', '1.0.0.1') } | Out-Null
+        }
+        $netConn = Get-CimInstance Win32_NetworkAdapter -ErrorAction SilentlyContinue | Where-Object { $_.NetConnectionStatus -eq 2 } | Select-Object -First 1
+        if ($netConn -and $netConn.NetConnectionID) {
+            netsh interface ipv4 set dnsservers name="$($netConn.NetConnectionID)" static 1.1.1.1 primary | Out-Null
+            netsh interface ipv4 add dnsservers name="$($netConn.NetConnectionID)" 1.0.0.1 index=2 | Out-Null
+        }
+        ipconfig /flushdns | Out-Null
+        [System.Windows.MessageBox]::Show(
+            "DNS Cloudflare Gamer aplicado com sucesso!`n`n• DNS Primário: 1.1.1.1`n• DNS Secundário: 1.0.0.1`n• Cache DNS limpo (Flush DNS realizado).`n`nRotas mais rápidas e menor ping em servidores de jogos.",
+            "DNS Cloudflare Ativo",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Information
+        )
+        Run-AuditScan
+    } catch {
+        [System.Windows.MessageBox]::Show("Erro ao aplicar DNS Cloudflare: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+    }
+})
+
+# Button: Aplicar DNS Google (8.8.8.8)
+$BtnApplyGoogleDns.Add_Click({
+    try {
+        $adapter = Get-CimInstance Win32_NetworkAdapterConfiguration -ErrorAction SilentlyContinue | Where-Object { $_.IPEnabled -eq $true } | Select-Object -First 1
+        if ($adapter) {
+            Invoke-CimMethod -InputObject $adapter -MethodName SetDNSServerSearchOrder -Arguments @{ DNSServerSearchOrder = @('8.8.8.8', '8.8.4.4') } | Out-Null
+        }
+        $netConn = Get-CimInstance Win32_NetworkAdapter -ErrorAction SilentlyContinue | Where-Object { $_.NetConnectionStatus -eq 2 } | Select-Object -First 1
+        if ($netConn -and $netConn.NetConnectionID) {
+            netsh interface ipv4 set dnsservers name="$($netConn.NetConnectionID)" static 8.8.8.8 primary | Out-Null
+            netsh interface ipv4 add dnsservers name="$($netConn.NetConnectionID)" 8.8.4.4 index=2 | Out-Null
+        }
+        ipconfig /flushdns | Out-Null
+        [System.Windows.MessageBox]::Show(
+            "DNS Google Gamer aplicado com sucesso!`n`n• DNS Primário: 8.8.8.8`n• DNS Secundário: 8.8.4.4`n• Cache DNS limpo (Flush DNS realizado).`n`nExcelente estabilidade e tempo de resolução global.",
+            "DNS Google Ativo",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Information
+        )
+        Run-AuditScan
+    } catch {
+        [System.Windows.MessageBox]::Show("Erro ao aplicar DNS Google: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+    }
+})
+
+# Button: Restaurar DNS Automático (DHCP)
+$BtnApplyDhcpDns.Add_Click({
+    try {
+        $adapter = Get-CimInstance Win32_NetworkAdapterConfiguration -ErrorAction SilentlyContinue | Where-Object { $_.IPEnabled -eq $true } | Select-Object -First 1
+        if ($adapter) {
+            Invoke-CimMethod -InputObject $adapter -MethodName SetDNSServerSearchOrder -Arguments @{ DNSServerSearchOrder = $null } | Out-Null
+        }
+        $netConn = Get-CimInstance Win32_NetworkAdapter -ErrorAction SilentlyContinue | Where-Object { $_.NetConnectionStatus -eq 2 } | Select-Object -First 1
+        if ($netConn -and $netConn.NetConnectionID) {
+            netsh interface ipv4 set dnsservers name="$($netConn.NetConnectionID)" source=dhcp | Out-Null
+        }
+        ipconfig /flushdns | Out-Null
+        [System.Windows.MessageBox]::Show(
+            "Configuração de DNS restaurada para Automático (DHCP da operadora / roteador)!`n`nCache DNS renovado com sucesso.",
+            "DNS DHCP Restaurado",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Information
+        )
+        Run-AuditScan
+    } catch {
+        [System.Windows.MessageBox]::Show("Erro ao restaurar DNS DHCP: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+    }
+})
+
+# Button: Testar Ping em Tempo Real
+$BtnTestPing.Add_Click({
+    $TxtBadgePing.Text = "Testando..."
+    $BadgePing.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#78350F")
+    $window.Dispatcher.Invoke([Action]{}, [System.Windows.Threading.DispatcherPriority]::Render)
+
+    try {
+        $p1 = Test-Connection -ComputerName 1.1.1.1 -Count 2 -ErrorAction SilentlyContinue
+        $p2 = Test-Connection -ComputerName 8.8.8.8 -Count 2 -ErrorAction SilentlyContinue
+        $allPings = @($p1; $p2) | Where-Object { $_.ResponseTime -ge 0 }
+        if ($allPings.Count -gt 0) {
+            $avg = [math]::Round(($allPings | Measure-Object -Property ResponseTime -Average).Average, 1)
+            $min = ($allPings | Measure-Object -Property ResponseTime -Minimum).Minimum
+            $max = ($allPings | Measure-Object -Property ResponseTime -Maximum).Maximum
+            
+            $TxtBadgePing.Text = "$avg ms"
+            if ($avg -le 25) {
+                Set-BadgeColor $BadgePing $TxtBadgePing "$avg ms (EXCELENTE)" "success"
+            } elseif ($avg -le 60) {
+                Set-BadgeColor $BadgePing $TxtBadgePing "$avg ms (BOM)" "warning"
+            } else {
+                Set-BadgeColor $BadgePing $TxtBadgePing "$avg ms (ELEVADO)" "danger"
+            }
+
+            [System.Windows.MessageBox]::Show(
+                "=== RESULTADO DO TESTE DE LATÊNCIA DE REDE ===`n`n• Ping Médio: $avg ms`n• Ping Mínimo: $min ms`n• Ping Máximo: $max ms`n• Pacotes Testados: $($allPings.Count)/4 recebidos`n`nSua conexão foi testada diretamente com os backbones Cloudflare e Google.",
+                "Diagnóstico de Ping",
+                [System.Windows.MessageBoxButton]::OK,
+                [System.Windows.MessageBoxImage]::Information
+            )
+        } else {
+            Set-BadgeColor $BadgePing $TxtBadgePing "SEM RESPOSTA" "danger"
+            [System.Windows.MessageBox]::Show("Não foi possível obter resposta de ping. Verifique se o cabo de rede ou Wi-Fi está conectado.", "Falha de Conexão", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
+        }
+    } catch {
+        [System.Windows.MessageBox]::Show("Erro ao executar teste de ping: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+    }
+})
+
+# Button: Flush DNS & Reset Winsock
+$BtnFlushDns.Add_Click({
+    try {
+        ipconfig /flushdns | Out-Null
+        ipconfig /registerdns | Out-Null
+        netsh winsock reset | Out-Null
+        [System.Windows.MessageBox]::Show(
+            "Limpeza de Rede Concluída com Sucesso!`n`n• Cache de resolução DNS foi esvaziado (Flush DNS)`n• Tabela de registro DNS renovada`n• Pilha Winsock resetada para o padrão limpo`n`nIsso resolve instabilidades de rota e engasgos de conexão em partidas.",
+            "Rede e DNS Limpos",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Information
+        )
+    } catch {
+        [System.Windows.MessageBox]::Show("Erro ao limpar cache de rede: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+    }
+})
+
 # Button: Criar Ponto de Restauração do Windows
 $BtnRestauracao.Add_Click({
     try {
@@ -1754,6 +2174,10 @@ $BtnLaudo.Add_Click({
         $secBootStatus = if ($diag.Vanguard.SecureBoot) { "Ativado (UEFI)" } else { "Desativado" }
         $vgcStatus = if (-not $diag.Vanguard.VgcInstalled) { "Não Instalado" } elseif ($diag.Vanguard.VgcAuto) { "Automático (Correto)" } else { "Manual / Parado (Incorreto)" }
         $integStatus = if (-not $diag.Vanguard.TestSigning -and -not $diag.Vanguard.NoIntegrity) { "100% Conforme" } else { "Testsigning Ativo (Risco de VAN 128)" }
+        $nagleStatus = if ($diag.Network.NagleDisabled) { "Desativado (Zero Delay)" } else { "Padrão (Buffer Ativo)" }
+        $throttleStatus = if ($diag.Network.ThrottlingDisabled) { "Liberado (Máximo)" } else { "Limitado (10 pct/ms)" }
+        $netDnsStatus = $diag.Network.DnsType
+        $netAdapterName = $diag.Network.AdapterName
 
         $html = @"
 <!DOCTYPE html>
@@ -1888,6 +2312,35 @@ $BtnLaudo.Add_Click({
                 <td><b>Integridade de Drivers (Erro VAN 128)</b></td>
                 <td><span class="badge $(if (-not $diag.Vanguard.TestSigning -and -not $diag.Vanguard.NoIntegrity) { 'badge-success' } else { 'badge-danger' })">$integStatus</span></td>
                 <td>$(if (-not $diag.Vanguard.TestSigning -and -not $diag.Vanguard.NoIntegrity) { 'Modo de testes desligado e assinatura de drivers ativa.' } else { 'Modo Testsigning ativo impede a inicialização do anti-cheat.' })</td>
+            </tr>
+        </table>
+
+        <div class="section-title">🌐 Auditoria de Rede, Ping &amp; Conexão Gamer</div>
+        <table>
+            <tr>
+                <th width="35%">Parâmetro de Rede</th>
+                <th width="25%">Status</th>
+                <th>Diagnóstico Técnico</th>
+            </tr>
+            <tr>
+                <td><b>Algoritmo de Nagle (TcpAckFrequency)</b></td>
+                <td><span class="badge $(if ($diag.Network.NagleDisabled) { 'badge-success' } else { 'badge-warning' })">$nagleStatus</span></td>
+                <td>$(if ($diag.Network.NagleDisabled) { 'Pacotes TCP transmitidos instantaneamente sem retenção.' } else { 'O Windows agrupa pequenos pacotes, gerando latência adicional.' })</td>
+            </tr>
+            <tr>
+                <td><b>Network Throttling Index</b></td>
+                <td><span class="badge $(if ($diag.Network.ThrottlingDisabled) { 'badge-success' } else { 'badge-warning' })">$throttleStatus</span></td>
+                <td>$(if ($diag.Network.ThrottlingDisabled) { 'Tráfego de rede irrestrito sem economia de CPU.' } else { 'Windows limitando fluxo de pacotes não-multimídia.' })</td>
+            </tr>
+            <tr>
+                <td><b>Servidores DNS em Uso</b></td>
+                <td><span class="badge $(if ($diag.Network.IsDnsOptimized) { 'badge-success' } else { 'badge-warning' })">$netDnsStatus</span></td>
+                <td>$($diag.Network.DnsServers)</td>
+            </tr>
+            <tr>
+                <td><b>Adaptador de Rede Ativo</b></td>
+                <td><span class="badge badge-success">Conectado</span></td>
+                <td>$netAdapterName</td>
             </tr>
         </table>
 

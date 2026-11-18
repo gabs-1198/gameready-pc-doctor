@@ -46,11 +46,17 @@ O **GameReady PC Doctor** é um utilitário portátil profissional de código ab
   * **Integridade de Drivers (Erros VAN 128 / VAN 57):** Detecta se o Windows está em modo de testes (`testsigning`) ou com checagem de assinatura desligada e oferece **Reparo em 1 Clique**.
   * **Inclusão no Laudo Técnico:** Toda a compatibilidade com o Vanguard é documentada no Laudo Técnico (HTML/PDF).
 
-### 7. 💡 Consultor de Hardware & Upgrades Personalizados
+### 7. 🌐 Rede & Ping Gamer (Otimizador de Latência TCP/IP & DNS)
+* **Eliminação do Atraso de Nagle (`TcpAckFrequency` & `TCPNoDelay`):** Desativa o agrupamento artificial de pacotes TCP do Windows para envio instantâneo sem delay de tick em jogos de tiro (CS2, Valorant, Fortnite, Warzone).
+* **Desativação de Network Throttling:** Remove a limitação padrão de 10 pacotes/ms do Windows (`NetworkThrottlingIndex = 0xFFFFFFFF`) e libera 100% da CPU para jogos (`SystemResponsiveness = 0`).
+* **DNS Gamer de 1-Clique:** Aplica servidores de alta performance com rotas otimizadas (**Cloudflare 1.1.1.1** ou **Google 8.8.8.8**) com opção de retorno a DHCP instantâneo.
+* **Diagnóstico de Ping em Tempo Real & Flush DNS:** Teste de latência ao vivo nos backbones e limpeza profunda de cache de rotas e pilha Winsock.
+
+### 8. 💡 Consultor de Hardware & Upgrades Personalizados
 * Classifica o PC em níveis (*Alta Performance Gamer*, *Intermediário*, *PC Básico*).
 * Gera recomendações dinâmicas de acordo com a máquina inspecionada (alertas de Single-Channel de RAM, saúde térmica da GPU, sistema em HD mecânico, SSD lotado ou falta de placa de vídeo dedicada).
 
-### 8. ✅ Verificador de Sucesso (Validação Automática)
+### 9. ✅ Verificador de Sucesso (Validação Automática)
 * Checklist de **7 pilares essenciais de performance**, pontuando o computador de 0% a 100% com selos de confirmação.
 
 ---
