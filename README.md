@@ -38,11 +38,19 @@ O **GameReady PC Doctor** é um utilitário portátil profissional de código ab
 ### 5. 🖥️ Taxa de Atualização do Monitor (Hz)
 * Lê a taxa atual e a capacidade máxima suportada via EDID. Emite alerta vermelho imediato caso um monitor gamer (144Hz/165Hz/240Hz) esteja travado em 60 Hz no Windows e oferece atalho direto para desbloquear a fluidez total.
 
-### 6. 💡 Consultor de Hardware & Upgrades Personalizados
+### 6. 🛡️ Riot Vanguard & Valorant Doctor (Anti-Cheat & Diagnóstico 1-Clique)
+* **Auditoria completa de compatibilidade com o Riot Vanguard (Valorant & League of Legends):**
+  * **TPM 2.0 (Erro VAN 9001):** Detecta a presença do módulo de segurança e oferece guia detalhado de ativação na BIOS para processadores AMD (fTPM) e Intel (PTT) em placas ASUS, MSI, Gigabyte e ASRock.
+  * **Secure Boot UEFI (Erro VAN 9003):** Identifica se a Inicialização Segura está desativada no Windows 11 e guia a desativação do CSM e habilitação do Secure Boot.
+  * **Serviço VGC (Erros VAN 1067 / VAN 84):** Detecta se o serviço do Vanguard está travado em "Manual" ou "Parado" e oferece botão de **Reparo em 1 Clique** para torná-lo Automático e ativo.
+  * **Integridade de Drivers (Erros VAN 128 / VAN 57):** Detecta se o Windows está em modo de testes (`testsigning`) ou com checagem de assinatura desligada e oferece **Reparo em 1 Clique**.
+  * **Inclusão no Laudo Técnico:** Toda a compatibilidade com o Vanguard é documentada no Laudo Técnico (HTML/PDF).
+
+### 7. 💡 Consultor de Hardware & Upgrades Personalizados
 * Classifica o PC em níveis (*Alta Performance Gamer*, *Intermediário*, *PC Básico*).
 * Gera recomendações dinâmicas de acordo com a máquina inspecionada (alertas de Single-Channel de RAM, saúde térmica da GPU, sistema em HD mecânico, SSD lotado ou falta de placa de vídeo dedicada).
 
-### 7. ✅ Verificador de Sucesso (Validação Automática)
+### 8. ✅ Verificador de Sucesso (Validação Automática)
 * Checklist de **7 pilares essenciais de performance**, pontuando o computador de 0% a 100% com selos de confirmação.
 
 ---

@@ -293,6 +293,103 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, Sys
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
+
+            <!-- TAB 4: RIOT VANGUARD & VALORANT DOCTOR -->
+            <TabItem Header="🛡️ Riot Vanguard">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,15,0,0">
+                    <StackPanel>
+                        <!-- Top Header Banner for Vanguard -->
+                        <Border Background="#1E2235" CornerRadius="12" Padding="20" Margin="0,0,0,18">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <TextBlock Text="🛡️ Auditoria de Compatibilidade Riot Vanguard" FontSize="18" FontWeight="Bold" Foreground="#38BDF8"/>
+                                        <Border Background="#EF4444" CornerRadius="6" Padding="8,2" Margin="10,2,0,2">
+                                            <TextBlock Text="VALORANT &amp; LOL" FontSize="11" FontWeight="Bold" Foreground="White"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Name="TxtVanguardOverall" Text="Analisando requisitos do anti-cheat de kernel da Riot Games..." FontSize="13" Foreground="#94A3B8"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" Name="BadgeVanguardOverall" Background="#10B981" CornerRadius="8" Padding="16,8">
+                                    <TextBlock Name="TxtBadgeVanguardOverall" Text="COMPATÍVEL" FontSize="13" FontWeight="Bold" Foreground="#042F2E"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- Vanguard Grid Cards -->
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Card 1: TPM 2.0 -->
+                            <Border Grid.Row="0" Grid.Column="0" Background="#1E2235" CornerRadius="12" Padding="18" Margin="0,0,10,14">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,10">
+                                        <TextBlock Text="🔒 TPM 2.0 (Erro VAN 9001)" FontSize="15" FontWeight="Bold" Foreground="White"/>
+                                        <Border Name="BadgeTpm" HorizontalAlignment="Right" Background="#334155" CornerRadius="6" Padding="8,3">
+                                            <TextBlock Name="TxtBadgeTpm" Text="Checando..." FontSize="12" FontWeight="Bold" Foreground="White"/>
+                                        </Border>
+                                    </Grid>
+                                    <TextBlock Name="TxtDescTpm" Text="O Valorant e o LoL no Windows 11 exigem o chip de segurança TPM 2.0 ativo na BIOS." TextWrapping="Wrap" Foreground="#94A3B8" FontSize="12" Margin="0,0,0,14" Height="42"/>
+                                    <Button Name="BtnGuiaTpm" Content="📘 Como Ativar TPM na BIOS" Background="#334155"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Card 2: Secure Boot -->
+                            <Border Grid.Row="0" Grid.Column="1" Background="#1E2235" CornerRadius="12" Padding="18" Margin="10,0,0,14">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,10">
+                                        <TextBlock Text="🛡️ Secure Boot (Erro VAN 9003)" FontSize="15" FontWeight="Bold" Foreground="White"/>
+                                        <Border Name="BadgeSecureBoot" HorizontalAlignment="Right" Background="#334155" CornerRadius="6" Padding="8,3">
+                                            <TextBlock Name="TxtBadgeSecureBoot" Text="Checando..." FontSize="12" FontWeight="Bold" Foreground="White"/>
+                                        </Border>
+                                    </Grid>
+                                    <TextBlock Name="TxtDescSecureBoot" Text="A Inicialização Segura impede que cheats se instalem antes do Windows iniciar." TextWrapping="Wrap" Foreground="#94A3B8" FontSize="12" Margin="0,0,0,14" Height="42"/>
+                                    <Button Name="BtnGuiaSecureBoot" Content="📘 Como Ativar Secure Boot" Background="#334155"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Card 3: Serviço VGC -->
+                            <Border Grid.Row="1" Grid.Column="0" Background="#1E2235" CornerRadius="12" Padding="18" Margin="0,0,10,0">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,10">
+                                        <TextBlock Text="⚙️ Serviço VGC (Erro VAN 1067 / 84)" FontSize="15" FontWeight="Bold" Foreground="White"/>
+                                        <Border Name="BadgeVgc" HorizontalAlignment="Right" Background="#334155" CornerRadius="6" Padding="8,3">
+                                            <TextBlock Name="TxtBadgeVgc" Text="Checando..." FontSize="12" FontWeight="Bold" Foreground="White"/>
+                                        </Border>
+                                    </Grid>
+                                    <TextBlock Name="TxtDescVgc" Text="O serviço de sistema do Vanguard deve iniciar automaticamente com o Windows." TextWrapping="Wrap" Foreground="#94A3B8" FontSize="12" Margin="0,0,0,14" Height="42"/>
+                                    <Button Name="BtnFixVgc" Content="⚡ Configurar VGC como Automático" Background="#10B981"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Card 4: Integridade do Windows (Testsigning) -->
+                            <Border Grid.Row="1" Grid.Column="1" Background="#1E2235" CornerRadius="12" Padding="18" Margin="10,0,0,0">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,10">
+                                        <TextBlock Text="📜 Assinatura de Drivers (Erro VAN 128)" FontSize="15" FontWeight="Bold" Foreground="White"/>
+                                        <Border Name="BadgeTestSigning" HorizontalAlignment="Right" Background="#334155" CornerRadius="6" Padding="8,3">
+                                            <TextBlock Name="TxtBadgeTestSigning" Text="Checando..." FontSize="12" FontWeight="Bold" Foreground="White"/>
+                                        </Border>
+                                    </Grid>
+                                    <TextBlock Name="TxtDescTestSigning" Text="Verificando se o modo de testes de drivers não assinados está desligado." TextWrapping="Wrap" Foreground="#94A3B8" FontSize="12" Margin="0,0,0,14" Height="42"/>
+                                    <Button Name="BtnFixIntegrity" Content="⚡ Reparar Integridade do Boot" Background="#334155"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
         </TabControl>
     </Grid>
 </Window>
@@ -367,6 +464,27 @@ $TxtScoreGeral = $window.FindName("TxtScoreGeral")
 $BadgeScoreGeral = $window.FindName("BadgeScoreGeral")
 $TxtScoreNumero = $window.FindName("TxtScoreNumero")
 $ContainerChecklist = $window.FindName("ContainerChecklist")
+
+# Tab 4 Riot Vanguard & Valorant Doctor
+$TxtVanguardOverall = $window.FindName("TxtVanguardOverall")
+$BadgeVanguardOverall = $window.FindName("BadgeVanguardOverall")
+$TxtBadgeVanguardOverall = $window.FindName("TxtBadgeVanguardOverall")
+$BadgeTpm = $window.FindName("BadgeTpm")
+$TxtBadgeTpm = $window.FindName("TxtBadgeTpm")
+$TxtDescTpm = $window.FindName("TxtDescTpm")
+$BtnGuiaTpm = $window.FindName("BtnGuiaTpm")
+$BadgeSecureBoot = $window.FindName("BadgeSecureBoot")
+$TxtBadgeSecureBoot = $window.FindName("TxtBadgeSecureBoot")
+$TxtDescSecureBoot = $window.FindName("TxtDescSecureBoot")
+$BtnGuiaSecureBoot = $window.FindName("BtnGuiaSecureBoot")
+$BadgeVgc = $window.FindName("BadgeVgc")
+$TxtBadgeVgc = $window.FindName("TxtBadgeVgc")
+$TxtDescVgc = $window.FindName("TxtDescVgc")
+$BtnFixVgc = $window.FindName("BtnFixVgc")
+$BadgeTestSigning = $window.FindName("BadgeTestSigning")
+$TxtBadgeTestSigning = $window.FindName("TxtBadgeTestSigning")
+$TxtDescTestSigning = $window.FindName("TxtDescTestSigning")
+$BtnFixIntegrity = $window.FindName("BtnFixIntegrity")
 
 # Helper function to set badge colors
 function Set-BadgeColor($badge, $textBlock, $text, $type) {
@@ -771,6 +889,9 @@ function Run-AuditScan {
 
     # Update Tab 3: Success Checklist
     Update-ChecklistTab
+
+    # Update Tab 4: Riot Vanguard & Valorant Doctor
+    Update-VanguardTab
 }
 
 # Function: Populate Tab 2 (Consultor de Upgrades & Avaliação Individual)
@@ -993,8 +1114,8 @@ function Update-UpgradeAdvisorTab {
         $col0.Width = New-Object Windows.GridLength(1, [Windows.GridUnitType]::Star)
         $col1 = New-Object Windows.Controls.ColumnDefinition
         $col1.Width = [Windows.GridLength]::Auto
-        $grid.ColumnDefinitions.Add($col0)
-        $grid.ColumnDefinitions.Add($col1)
+        $null = $grid.ColumnDefinitions.Add($col0)
+        $null = $grid.ColumnDefinitions.Add($col1)
 
         $stack = New-Object Windows.Controls.StackPanel
         $catTxt = New-Object Windows.Controls.TextBlock
@@ -1016,15 +1137,15 @@ function Update-UpgradeAdvisorTab {
         $descTxt.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#94A3B8")
         $descTxt.TextWrapping = [Windows.TextWrapping]::Wrap
 
-        $stack.Children.Add($catTxt)
-        $stack.Children.Add($titleTxt)
-        $stack.Children.Add($descTxt)
+        $null = $stack.Children.Add($catTxt)
+        $null = $stack.Children.Add($titleTxt)
+        $null = $stack.Children.Add($descTxt)
         [Windows.Controls.Grid]::SetColumn($stack, 0)
-        $grid.Children.Add($stack)
+        $null = $grid.Children.Add($stack)
 
         $badge = New-Object Windows.Controls.Border
         $badge.CornerRadius = New-Object Windows.CornerRadius(6)
-        $badge.Padding = New-Object Windows.Thickness(12, 6)
+        $badge.Padding = New-Object Windows.Thickness(12, 6, 12, 6)
         $badge.VerticalAlignment = [Windows.VerticalAlignment]::Top
 
         $badgeTxt = New-Object Windows.Controls.TextBlock
@@ -1060,10 +1181,10 @@ function Update-UpgradeAdvisorTab {
 
         $badge.Child = $badgeTxt
         [Windows.Controls.Grid]::SetColumn($badge, 1)
-        $grid.Children.Add($badge)
+        $null = $grid.Children.Add($badge)
 
         $card.Child = $grid
-        $ContainerRecomendacoes.Children.Add($card)
+        $null = $ContainerRecomendacoes.Children.Add($card)
     }
 }
 
@@ -1132,8 +1253,8 @@ function Update-ChecklistTab {
         $col0.Width = New-Object Windows.GridLength(1, [Windows.GridUnitType]::Star)
         $col1 = New-Object Windows.Controls.ColumnDefinition
         $col1.Width = [Windows.GridLength]::Auto
-        $grid.ColumnDefinitions.Add($col0)
-        $grid.ColumnDefinitions.Add($col1)
+        $null = $grid.ColumnDefinitions.Add($col0)
+        $null = $grid.ColumnDefinitions.Add($col1)
 
         $stack = New-Object Windows.Controls.StackPanel
         $title = New-Object Windows.Controls.TextBlock
@@ -1153,14 +1274,14 @@ function Update-ChecklistTab {
         }
         $desc.FontSize = 13
 
-        $stack.Children.Add($title)
-        $stack.Children.Add($desc)
+        $null = $stack.Children.Add($title)
+        $null = $stack.Children.Add($desc)
         [Windows.Controls.Grid]::SetColumn($stack, 0)
-        $grid.Children.Add($stack)
+        $null = $grid.Children.Add($stack)
 
         $badge = New-Object Windows.Controls.Border
         $badge.CornerRadius = New-Object Windows.CornerRadius(6)
-        $badge.Padding = New-Object Windows.Thickness(12, 6)
+        $badge.Padding = New-Object Windows.Thickness(12, 6, 12, 6)
 
         $badgeTxt = New-Object Windows.Controls.TextBlock
         if ($it.Success) {
@@ -1177,10 +1298,10 @@ function Update-ChecklistTab {
 
         $badge.Child = $badgeTxt
         [Windows.Controls.Grid]::SetColumn($badge, 1)
-        $grid.Children.Add($badge)
+        $null = $grid.Children.Add($badge)
 
         $card.Child = $grid
-        $ContainerChecklist.Children.Add($card)
+        $null = $ContainerChecklist.Children.Add($card)
     }
 
     $pct = [math]::Round(($scoreCount / $totalChecks) * 100, 0)
@@ -1197,6 +1318,158 @@ function Update-ChecklistTab {
         $TxtScoreGeral.Text = "Atenção: Seu hardware está sofrendo gargalos de configuração que reduzem o desempenho em jogos."
         $BadgeScoreGeral.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#7F1D1D")
         $TxtScoreNumero.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#F87171")
+    }
+}
+
+# Function: Populate Tab 4 (Riot Vanguard & Valorant Doctor)
+function Update-VanguardTab {
+    # 1. TPM 2.0 Check (VAN 9001)
+    $hasTpm2 = $false
+    try {
+        $tpm = Get-CimInstance Win32_PnPEntity -ErrorAction SilentlyContinue | Where-Object { $_.HardwareID -match 'MSFT0101|TPM' -or $_.Name -match 'Trusted Platform|TPM 2\.0' }
+        if ($tpm) { $hasTpm2 = $true }
+    } catch {}
+    if (-not $hasTpm2) {
+        try {
+            $tpmWmi = Get-CimInstance -Namespace root\cimv2\Security\MicrosoftTpm -ClassName Win32_Tpm -ErrorAction SilentlyContinue
+            if ($tpmWmi -and ($tpmWmi.SpecVersion -match "2\.0" -or $tpmWmi.IsEnabled_InitialValue)) {
+                $hasTpm2 = $true
+            }
+        } catch {}
+    }
+
+    # 2. Secure Boot Check (VAN 9003)
+    $isSecureBoot = $false
+    try {
+        $sbVal = (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot\State' -Name 'UEFISecureBootEnabled' -ErrorAction SilentlyContinue).UEFISecureBootEnabled
+        if ($sbVal -eq 1) { $isSecureBoot = $true }
+    } catch {}
+    if (-not $isSecureBoot) {
+        try {
+            $isSecureBoot = Confirm-SecureBootUEFI -ErrorAction SilentlyContinue
+        } catch {}
+    }
+
+    # 3. Riot Vanguard Service 'vgc' Check (VAN 1067 / VAN 84)
+    $vgcInstalled = $false
+    $vgcRunning = $false
+    $vgcAuto = $false
+    $vgcObj = Get-Service -Name "vgc" -ErrorAction SilentlyContinue
+    if ($vgcObj) {
+        $vgcInstalled = $true
+        if ($vgcObj.Status -eq "Running") { $vgcRunning = $true }
+        if ($vgcObj.StartType -eq "Automatic") { $vgcAuto = $true }
+    }
+
+    # 4. Driver Integrity & Testsigning Check (VAN 128 / VAN 57)
+    $testSigningOn = $false
+    $noIntegrityOn = $false
+    try {
+        $startOpts = (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control' -Name 'SystemStartOptions' -ErrorAction SilentlyContinue).SystemStartOptions
+        if ($startOpts -match "TESTSIGNING|DISABLE_INTEGRITY_CHECKS") {
+            $testSigningOn = $true
+        }
+    } catch {}
+    try {
+        $bcd = bcdedit 2>$null
+        if ($bcd -match 'testsigning\s+(?:Yes|Sim|True|1)') { $testSigningOn = $true }
+        if ($bcd -match 'nointegritychecks\s+(?:Yes|Sim|True|1)') { $noIntegrityOn = $true }
+    } catch {}
+
+    $global:DiagnosticState.Vanguard = @{
+        Tpm = $hasTpm2
+        SecureBoot = $isSecureBoot
+        VgcInstalled = $vgcInstalled
+        VgcRunning = $vgcRunning
+        VgcAuto = $vgcAuto
+        TestSigning = $testSigningOn
+        NoIntegrity = $noIntegrityOn
+    }
+
+    # Update TPM UI
+    if ($hasTpm2) {
+        Set-BadgeColor $BadgeTpm $TxtBadgeTpm "ATIVO (TPM 2.0)" "success"
+        $TxtDescTpm.Text = "Excelente! Módulo TPM 2.0 detectado e ativo na BIOS. Requisito VAN 9001 atendido com sucesso."
+        $BtnGuiaTpm.IsEnabled = $true
+        $BtnGuiaTpm.Content = "✅ TPM 2.0 Ativo (Ver Instruções)"
+        $BtnGuiaTpm.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#334155")
+    } else {
+        Set-BadgeColor $BadgeTpm $TxtBadgeTpm "DESATIVADO / AUSENTE" "danger"
+        $TxtDescTpm.Text = "ALERTA: TPM 2.0 não detectado! O Valorant/LoL não iniciará (Erro VAN 9001). Ative o fTPM (AMD) ou PTT (Intel) na BIOS."
+        $BtnGuiaTpm.IsEnabled = $true
+        $BtnGuiaTpm.Content = "📘 Como Ativar TPM 2.0 na BIOS"
+        $BtnGuiaTpm.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#EF4444")
+    }
+
+    # Update Secure Boot UI
+    if ($isSecureBoot) {
+        Set-BadgeColor $BadgeSecureBoot $TxtBadgeSecureBoot "ATIVADO (UEFI)" "success"
+        $TxtDescSecureBoot.Text = "Excelente! A Inicialização Segura está ativa em modo UEFI. Requisito VAN 9003 atendido com sucesso."
+        $BtnGuiaSecureBoot.IsEnabled = $true
+        $BtnGuiaSecureBoot.Content = "✅ Secure Boot Ativo (Ver Instruções)"
+        $BtnGuiaSecureBoot.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#334155")
+    } else {
+        Set-BadgeColor $BadgeSecureBoot $TxtBadgeSecureBoot "DESATIVADO" "danger"
+        $TxtDescSecureBoot.Text = "ALERTA: Secure Boot desativado! Causa o erro VAN 9003 no Windows 11. Ative o Secure Boot em modo UEFI na BIOS."
+        $BtnGuiaSecureBoot.IsEnabled = $true
+        $BtnGuiaSecureBoot.Content = "📘 Como Ativar Secure Boot na BIOS"
+        $BtnGuiaSecureBoot.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#EF4444")
+    }
+
+    # Update VGC UI
+    if (-not $vgcInstalled) {
+        Set-BadgeColor $BadgeVgc $TxtBadgeVgc "NÃO INSTALADO" "warning"
+        $TxtDescVgc.Text = "Riot Vanguard não está instalado neste PC. Será configurado automaticamente ao instalar o Valorant ou League of Legends."
+        $BtnFixVgc.IsEnabled = $false
+        $BtnFixVgc.Content = "Riot Vanguard não instalado"
+        $BtnFixVgc.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#334155")
+    } elseif ($vgcAuto -and $vgcRunning) {
+        Set-BadgeColor $BadgeVgc $TxtBadgeVgc "OPERACIONAL (Auto)" "success"
+        $TxtDescVgc.Text = "Excelente! O serviço VGC está em Inicialização Automática e Em Execução. Sem risco de erro VAN 1067 / VAN 84."
+        $BtnFixVgc.IsEnabled = $false
+        $BtnFixVgc.Content = "✅ Serviço VGC Perfeito"
+        $BtnFixVgc.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#334155")
+    } else {
+        $statusStr = if ($vgcObj.StartType -ne "Automatic") { "Modo $($vgcObj.StartType)" } else { "Parado" }
+        Set-BadgeColor $BadgeVgc $TxtBadgeVgc "INCORRETO ($statusStr)" "danger"
+        $TxtDescVgc.Text = "ALERTA: O serviço VGC está como $($vgcObj.StartType)! Isso causa o erro VAN 1067 / 84 e fecha o jogo no meio da partida. Clique abaixo para reparar."
+        $BtnFixVgc.IsEnabled = $true
+        $BtnFixVgc.Content = "⚡ Configurar VGC como Automático (1 Clique)"
+        $BtnFixVgc.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#10B981")
+    }
+
+    # Update Testsigning / Driver Integrity UI
+    if ($testSigningOn -or $noIntegrityOn) {
+        Set-BadgeColor $BadgeTestSigning $TxtBadgeTestSigning "TESTSIGNING ATIVO" "danger"
+        $TxtDescTestSigning.Text = "ALERTA: O Windows está em modo de testes de drivers não assinados. O Vanguard bloqueará a inicialização (Erro VAN 128 / VAN 57)."
+        $BtnFixIntegrity.IsEnabled = $true
+        $BtnFixIntegrity.Content = "⚡ Reparar Integridade do Boot (1 Clique)"
+        $BtnFixIntegrity.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#EF4444")
+    } else {
+        Set-BadgeColor $BadgeTestSigning $TxtBadgeTestSigning "INTEGRIDADE 100%" "success"
+        $TxtDescTestSigning.Text = "Excelente! Drivers não assinados estão bloqueados e a integridade de boot do Windows está 100% segura para o Vanguard."
+        $BtnFixIntegrity.IsEnabled = $false
+        $BtnFixIntegrity.Content = "✅ Integridade 100% OK"
+        $BtnFixIntegrity.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#334155")
+    }
+
+    # Vanguard Overall Status
+    $vanguardReady = $hasTpm2 -and $isSecureBoot -and (-not $testSigningOn) -and (-not $noIntegrityOn)
+    if ($vgcInstalled -and (-not $vgcAuto -or -not $vgcRunning)) {
+        # If Vanguard is installed, VGC must also be automatic
+        $vanguardReady = $false
+    }
+
+    if ($vanguardReady) {
+        $TxtVanguardOverall.Text = "Este computador atende a todos os requisitos de segurança e integridade do Riot Vanguard. Pronto para jogar Valorant e LoL sem erros!"
+        $BadgeVanguardOverall.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#065F46")
+        $TxtBadgeVanguardOverall.Text = "100% COMPATÍVEL"
+        $TxtBadgeVanguardOverall.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#34D399")
+    } else {
+        $TxtVanguardOverall.Text = "Atenção: Identificamos configurações que vão causar erros no Riot Vanguard (VAN 9001, 9003, 1067 ou 128). Use as correções abaixo!"
+        $BadgeVanguardOverall.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#7F1D1D")
+        $TxtBadgeVanguardOverall.Text = "AJUSTES NECESSÁRIOS"
+        $TxtBadgeVanguardOverall.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#FCA5A5")
     }
 }
 
@@ -1353,6 +1626,93 @@ $BtnMouseFix.Add_Click({
     }
 })
 
+# Button: Reparar Inicialização do VGC (Riot Vanguard)
+$BtnFixVgc.Add_Click({
+    try {
+        & sc.exe config vgc start= auto | Out-Null
+        Start-Service -Name "vgc" -ErrorAction SilentlyContinue
+        [System.Windows.MessageBox]::Show(
+            "O serviço Riot Vanguard (vgc) foi configurado para Inicialização Automática com sucesso!`n`nIsso corrige e previne desconexões e os erros VAN 1067 e VAN 84 no Valorant e LoL.",
+            "Riot Vanguard Configurado",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Information
+        )
+        Run-AuditScan
+    } catch {
+        [System.Windows.MessageBox]::Show("Erro ao configurar serviço vgc: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+    }
+})
+
+# Button: Reparar Integridade de Drivers e Testsigning
+$BtnFixIntegrity.Add_Click({
+    try {
+        & bcdedit /set testsigning off | Out-Null
+        & bcdedit /set nointegritychecks off | Out-Null
+        [System.Windows.MessageBox]::Show(
+            "O modo de testes de drivers não assinados (Testsigning) e verificações de integridade foram corrigidos com sucesso!`n`nSerá necessário REINICIAR o computador para que o Windows aplique as alterações do boot e o Vanguard inicialize sem o erro VAN 128 / VAN 57.",
+            "Integridade do Boot Corrigida",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Information
+        )
+        Run-AuditScan
+    } catch {
+        [System.Windows.MessageBox]::Show("Erro ao alterar configurações do BCD: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+    }
+})
+
+# Button: Guia BIOS TPM 2.0
+$BtnGuiaTpm.Add_Click({
+    [System.Windows.MessageBox]::Show(
+@"
+=== GUIA DEFINITIVO: COMO ATIVAR O TPM 2.0 NA BIOS (ERRO VAN 9001) ===
+
+O Riot Vanguard exige o TPM 2.0 ativo no Windows 11 para impedir a injeção de trapaças a nível de hardware.
+
+COMO ATIVAR:
+1. Reinicie o computador e fique pressionando 'Del' ou 'F2' para entrar na BIOS.
+2. Dependendo do seu processador e placa-mãe, ative a opção correspondente:
+
+• PROCESSADOR AMD RYZEN (Todas as marcas):
+  - ASUS: Advanced -> AMD fTPM configuration -> Firmware TPM: [Enable / Firmware TPM]
+  - GIGABYTE: Settings -> Miscellaneous -> AMD CPU fTPM: [Enabled]
+  - MSI: Security -> Trusted Computing -> AMD fTPM switch: [AMD CPU fTPM]
+  - ASROCK: Advanced -> CPU Configuration -> AMD fTPM Switch: [AMD CPU fTPM]
+
+• PROCESSADOR INTEL CORE (Todas as marcas):
+  - ASUS: Advanced -> PCH-FW Configuration -> Intel Platform Trust Technology (PTT): [Enabled]
+  - GIGABYTE: Settings -> Miscellaneous -> Intel Platform Trust Technology (PTT): [Enabled]
+  - MSI: Security -> Trusted Computing -> Security Device Support: [Enabled] -> TPM Device: [PTT]
+  - ASROCK: Security -> Intel PTT: [Enabled]
+
+3. Pressione F10 para salvar e reiniciar.
+Ao voltar para o Windows, o erro VAN 9001 estará resolvido!
+"@, "Guia de Ativação do TPM 2.0", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+})
+
+# Button: Guia BIOS Secure Boot
+$BtnGuiaSecureBoot.Add_Click({
+    [System.Windows.MessageBox]::Show(
+@"
+=== GUIA DEFINITIVO: COMO ATIVAR O SECURE BOOT NA BIOS (ERRO VAN 9003) ===
+
+O erro VAN 9003 acontece quando o Windows 11 está instalado mas a Inicialização Segura (Secure Boot) está desativada na BIOS.
+
+PASSO A PASSO NA BIOS:
+1. Reinicie o PC e pressione 'Del' ou 'F2' repetidamente até abrir a BIOS.
+2. PASSO OBRIGATÓRIO: Desative o CSM (Modo de Compatibilidade Legado):
+   - Procure a aba 'Boot' -> 'CSM Support' (ou Launch CSM) -> Mude para [Disabled].
+   - (Nota: O Secure Boot só pode ser ativado com o CSM desligado).
+3. ATIVAR O SECURE BOOT:
+   - Vá na aba 'Boot' ou 'Security' -> 'Secure Boot'.
+   - Mude 'Secure Boot' para [Enabled].
+   - 'Secure Boot Mode' deve estar como [Standard].
+   - Se o status disser 'Not Active' mesmo com Enabled: clique na opção 'Restore Factory Keys' ou 'Install Default Secure Boot Keys' na mesma tela.
+4. Pressione F10 para salvar e reiniciar.
+
+Ao reiniciar no Windows, o Secure Boot estará ativo e o Valorant abrirá normalmente!
+"@, "Guia de Ativação do Secure Boot", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+})
+
 # Button: Criar Ponto de Restauração do Windows
 $BtnRestauracao.Add_Click({
     try {
@@ -1390,6 +1750,10 @@ $BtnLaudo.Add_Click({
         $gameModeStatus = if ($diag.GameMode) { "Ativado" } else { "Desativado" }
         $mouseStatus = if ($diag.MouseAccelOff) { "Desativada (Mira 1:1)" } else { "Ativada (Ponteiro Acelerado)" }
         $tempStatus = if ($diag.Gpu.Temp) { "$($diag.Gpu.Temp) °C" } else { "N/A" }
+        $tpmStatus = if ($diag.Vanguard.Tpm) { "Ativo (TPM 2.0)" } else { "Desativado / Não Detectado" }
+        $secBootStatus = if ($diag.Vanguard.SecureBoot) { "Ativado (UEFI)" } else { "Desativado" }
+        $vgcStatus = if (-not $diag.Vanguard.VgcInstalled) { "Não Instalado" } elseif ($diag.Vanguard.VgcAuto) { "Automático (Correto)" } else { "Manual / Parado (Incorreto)" }
+        $integStatus = if (-not $diag.Vanguard.TestSigning -and -not $diag.Vanguard.NoIntegrity) { "100% Conforme" } else { "Testsigning Ativo (Risco de VAN 128)" }
 
         $html = @"
 <!DOCTYPE html>
@@ -1495,6 +1859,35 @@ $BtnLaudo.Add_Click({
                 <td><b>Modo de Jogo &amp; Precisão do Mouse</b></td>
                 <td><span class="badge $(if ($diag.GameMode -and $diag.MouseAccelOff) { 'badge-success' } else { 'badge-warning' })">$(if ($diag.GameMode -and $diag.MouseAccelOff) { 'Otimizado' } else { 'Pendente' })</span></td>
                 <td>Modo de Jogo: $gameModeStatus | Aceleração: $mouseStatus</td>
+            </tr>
+        </table>
+
+        <div class="section-title">🛡️ Auditoria Riot Vanguard &amp; Anti-Cheat (Valorant / LoL)</div>
+        <table>
+            <tr>
+                <th width="35%">Requisito Vanguard</th>
+                <th width="25%">Status</th>
+                <th>Diagnóstico Técnico</th>
+            </tr>
+            <tr>
+                <td><b>Módulo TPM 2.0 (Erro VAN 9001)</b></td>
+                <td><span class="badge $(if ($diag.Vanguard.Tpm) { 'badge-success' } else { 'badge-danger' })">$tpmStatus</span></td>
+                <td>$(if ($diag.Vanguard.Tpm) { 'Módulo de segurança fTPM/PTT ativo na BIOS.' } else { 'Requer ativação do fTPM (AMD) ou PTT (Intel) na BIOS.' })</td>
+            </tr>
+            <tr>
+                <td><b>Secure Boot UEFI (Erro VAN 9003)</b></td>
+                <td><span class="badge $(if ($diag.Vanguard.SecureBoot) { 'badge-success' } else { 'badge-danger' })">$secBootStatus</span></td>
+                <td>$(if ($diag.Vanguard.SecureBoot) { 'Inicialização Segura ativa em modo UEFI.' } else { 'Requer desativar CSM e ativar Secure Boot na BIOS.' })</td>
+            </tr>
+            <tr>
+                <td><b>Serviço VGC (Erro VAN 1067 / 84)</b></td>
+                <td><span class="badge $(if ($diag.Vanguard.VgcAuto) { 'badge-success' } elseif (-not $diag.Vanguard.VgcInstalled) { 'badge-warning' } else { 'badge-danger' })">$vgcStatus</span></td>
+                <td>$(if ($diag.Vanguard.VgcAuto) { 'Serviço configurado para iniciar automaticamente.' } elseif (-not $diag.Vanguard.VgcInstalled) { 'Riot Vanguard não instalado no sistema.' } else { 'Serviço em modo Manual causa desconexões VAN 1067.' })</td>
+            </tr>
+            <tr>
+                <td><b>Integridade de Drivers (Erro VAN 128)</b></td>
+                <td><span class="badge $(if (-not $diag.Vanguard.TestSigning -and -not $diag.Vanguard.NoIntegrity) { 'badge-success' } else { 'badge-danger' })">$integStatus</span></td>
+                <td>$(if (-not $diag.Vanguard.TestSigning -and -not $diag.Vanguard.NoIntegrity) { 'Modo de testes desligado e assinatura de drivers ativa.' } else { 'Modo Testsigning ativo impede a inicialização do anti-cheat.' })</td>
             </tr>
         </table>
 
