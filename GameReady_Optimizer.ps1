@@ -401,47 +401,87 @@ function Run-AuditScan {
 
     $TxtSpecs.Text = "$cpuName | $gpuName | Placa-Mãe: $boardInfo"
 
-    # 4. Resizable BAR Check via nvidia-smi
+    # 4. Universal Resizable BAR / AMD SAM Check
+    $gpuVendor = "NVIDIA"
+    $rebarTechName = "Resizable BAR"
+    if ($gpuName -match "AMD|Radeon|RX\s*\d") {
+        $gpuVendor = "AMD"
+        $rebarTechName = "AMD Smart Access Memory (SAM)"
+    } elseif ($gpuName -match "Intel.*Arc") {
+        $gpuVendor = "Intel"
+        $rebarTechName = "Intel Arc Resizable BAR"
+    }
+
     $rebarActive = $false
     $barTotal = 0
     $pcieGen = 3
     $pcieWidth = 16
-    try {
-        $nvidiaQuery = nvidia-smi -q 2>$null | Select-String -Pattern "BAR1 Memory Usage" -Context 0,2
-        if ($nvidiaQuery) {
-            foreach ($line in $nvidiaQuery.Context.PostContext) {
-                if ($line -match "Total\s*:\s*(\d+)\s*MiB") {
-                    $barTotal = [int]$matches[1]
-                    if ($barTotal -ge 2048) { $rebarActive = $true }
+
+    # Method A: NVIDIA via nvidia-smi
+    if ($gpuVendor -eq "NVIDIA") {
+        try {
+            $nvidiaQuery = nvidia-smi -q 2>$null | Select-String -Pattern "BAR1 Memory Usage" -Context 0,2
+            if ($nvidiaQuery) {
+                foreach ($line in $nvidiaQuery.Context.PostContext) {
+                    if ($line -match "Total\s*:\s*(\d+)\s*MiB") {
+                        $barTotal = [int]$matches[1]
+                        if ($barTotal -ge 2048) { $rebarActive = $true }
+                    }
                 }
             }
-        }
-        $pcieRaw = nvidia-smi --query-gpu=pcie.link.gen.current,pcie.link.width.current --format=csv,noheader,nounits 2>$null
-        if ($pcieRaw) {
-            $parts = $pcieRaw.Trim().Split(',')
-            if ($parts.Count -ge 2) {
-                $pcieGen = [int]$parts[0].Trim()
-                $pcieWidth = [int]$parts[1].Trim()
+            $pcieRaw = nvidia-smi --query-gpu=pcie.link.gen.current,pcie.link.width.current --format=csv,noheader,nounits 2>$null
+            if ($pcieRaw) {
+                $parts = $pcieRaw.Trim().Split(',')
+                if ($parts.Count -ge 2) {
+                    $pcieGen = [int]$parts[0].Trim()
+                    $pcieWidth = [int]$parts[1].Trim()
+                }
             }
-        }
-    } catch {}
+        } catch {}
+    }
+
+    # Method B: AMD Radeon SAM / Intel Arc via Registry Class check
+    if (-not $rebarActive) {
+        try {
+            $gpuKeys = Get-ChildItem -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}' -ErrorAction SilentlyContinue
+            foreach ($k in $gpuKeys) {
+                $prop = Get-ItemProperty -Path $k.PSPath -ErrorAction SilentlyContinue
+                if ($prop.DriverDesc -and $prop.DriverDesc -match $gpuName) {
+                    if ($prop.KMD_EnableSAM -eq 1 -or $prop.SAMStatus -eq 1 -or $prop.EnableLargePageSupport -eq 1) {
+                        $rebarActive = $true
+                        $barTotal = [math]::Round(($gpuObj.AdapterRAM / 1MB), 0)
+                    }
+                }
+            }
+        } catch {}
+    }
 
     $global:DiagnosticState.Rebar = $rebarActive
     $global:DiagnosticState.BarTotal = $barTotal
     $global:DiagnosticState.PcieGen = $pcieGen
     $global:DiagnosticState.PcieWidth = $pcieWidth
     $global:DiagnosticState.Cpu = @{ Name = $cpuName; Cores = $cpuCores; Threads = $cpuThreads }
-    $global:DiagnosticState.Gpu = @{ Name = $gpuName; IsIntegrated = $isIntegratedGpu }
+    $global:DiagnosticState.Gpu = @{ Name = $gpuName; Vendor = $gpuVendor; TechName = $rebarTechName; IsIntegrated = $isIntegratedGpu }
     $global:DiagnosticState.Motherboard = $boardInfo
 
     if ($rebarActive) {
-        Set-BadgeColor $BadgeRebar $TxtBadgeRebar "ATIVADO ($barTotal MiB)" "success"
-        $TxtDescRebar.Text = "Excelente! A CPU acessa toda a VRAM da sua GPU sem gargalo de barramento."
+        $badgeText = if ($gpuVendor -eq "AMD") { "SAM ATIVADO" } else { "ATIVADO ($barTotal MiB)" }
+        Set-BadgeColor $BadgeRebar $TxtBadgeRebar $badgeText "success"
+        if ($gpuVendor -eq "AMD") {
+            $TxtDescRebar.Text = "Excelente! O AMD Smart Access Memory (SAM) está ativo, permitindo acesso total à VRAM da Radeon."
+        } else {
+            $TxtDescRebar.Text = "Excelente! A CPU acessa toda a VRAM da sua GPU sem gargalo de barramento."
+        }
         $BtnGuiaRebar.IsEnabled = $false
-        $BtnGuiaRebar.Content = "✅ ReBAR Ativo e Funcional"
+        $BtnGuiaRebar.Content = "✅ Ativo e Funcional"
     } else {
-        Set-BadgeColor $BadgeRebar $TxtBadgeRebar "DESATIVADO" "danger"
-        $TxtDescRebar.Text = "Sua placa de vídeo está transferindo dados em blocos pequenos de 256MB. Ative na BIOS para ganho imediato de FPS."
+        $badgeText = if ($gpuVendor -eq "AMD") { "SAM DESATIVADO" } else { "DESATIVADO" }
+        Set-BadgeColor $BadgeRebar $TxtBadgeRebar $badgeText "danger"
+        if ($gpuVendor -eq "AMD") {
+            $TxtDescRebar.Text = "O AMD Smart Access Memory (SAM) está desativado na BIOS. Ative para ganhar até 15% de FPS na sua Radeon."
+        } else {
+            $TxtDescRebar.Text = "Sua placa de vídeo está transferindo dados em blocos pequenos de 256MB. Ative na BIOS para ganho imediato de FPS."
+        }
         $BtnGuiaRebar.IsEnabled = $true
         $BtnGuiaRebar.Content = "📘 Como Ativar na BIOS"
     }
@@ -568,10 +608,22 @@ function Run-AuditScan {
         Model = $cDisk.Model
     }
 
-    # 9. Disk Junk & Shaders Scan (Portable Dynamic Paths)
+    # 9. Universal Multi-GPU Shader Cache & Junk Scan (NVIDIA, AMD Radeon, Intel Arc & Windows)
     $junkBytes = 0
     $junkPaths = @(
+        # NVIDIA Shader Caches
         (Join-Path $env:LOCALAPPDATA "NVIDIA\DXCache"),
+        (Join-Path $env:LOCALAPPDATA "NVIDIA\GLCache"),
+        (Join-Path $env:LOCALAPPDATA "D3DSCache"),
+        # AMD Radeon Shader Caches
+        (Join-Path $env:LOCALAPPDATA "AMD\DxCache"),
+        (Join-Path $env:LOCALAPPDATA "AMD\GLCache"),
+        (Join-Path $env:LOCALAPPDATA "AMD\D3DCache"),
+        (Join-Path $env:LOCALAPPDATA "AMD\OglCache"),
+        # Intel Arc Shader Caches
+        (Join-Path $env:LOCALAPPDATA "Intel\ShaderCache"),
+        (Join-Path $env:LOCALAPPDATA "Intel\DXCache"),
+        # General & CrashDumps
         $env:TEMP,
         (Join-Path $env:LOCALAPPDATA "CrashDumps")
     )
@@ -586,11 +638,11 @@ function Run-AuditScan {
     if ($junkMB -gt 5000) {
         $junkGB = [math]::Round(($junkMB / 1024), 1)
         Set-BadgeColor $BadgeLixo $TxtBadgeLixo "$junkGB GB ACUMULADOS" "danger"
-        $TxtDescLixo.Text = "Muito lixo acumulado em caches antigos da NVIDIA e temporários. Recomendado limpar para evitar travamentos de shaders."
+        $TxtDescLixo.Text = "Muito lixo acumulado em caches de shaders antigos (NVIDIA/AMD/Intel) e temporários. Recomendado limpar para evitar stuttering."
     } elseif ($junkMB -gt 1000) {
         $junkGB = [math]::Round(($junkMB / 1024), 1)
         Set-BadgeColor $BadgeLixo $TxtBadgeLixo "$junkGB GB ENCONTRADOS" "warning"
-        $TxtDescLixo.Text = "Caches e arquivos temporários podem ser esvaziados para liberar espaço no SSD."
+        $TxtDescLixo.Text = "Caches de shaders de GPU e arquivos temporários podem ser esvaziados para liberar espaço no SSD."
     } else {
         Set-BadgeColor $BadgeLixo $TxtBadgeLixo "SISTEMA LIMPO ($junkMB MB)" "success"
         $TxtDescLixo.Text = "Seu SSD está livre de acúmulos pesados de shaders ou temporários."
@@ -744,17 +796,22 @@ function Update-UpgradeAdvisorTab {
         })
     }
 
-    # Dynamic Rule: Resizable BAR
+    # Dynamic Rule: Resizable BAR / AMD SAM
+    $gpuVen = $global:DiagnosticState.Gpu.Vendor
     if (-not $global:DiagnosticState.Rebar) {
+        $rebarTitle = if ($gpuVen -eq "AMD") { "CONFIGURAÇÃO NA BIOS: Ativar o AMD Smart Access Memory (SAM)" } elseif ($gpuVen -eq "Intel") { "CONFIGURAÇÃO NA BIOS: Ativar o Resizable BAR da Intel Arc" } else { "CONFIGURAÇÃO NA BIOS: Ativar o Resizable BAR (ReBAR)" }
+        $rebarDesc = if ($gpuVen -eq "AMD") { "Sua placa Radeon suporta AMD Smart Access Memory (SAM), mas está desligado na BIOS. Ativá-lo traz ganho imediato de 5% a 15% nos FPS mínimos." } elseif ($gpuVen -eq "Intel") { "Sua placa Intel Arc exige Resizable BAR para funcionar na velocidade máxima. Sem ele, a perda de FPS pode passar de 30%." } else { "Sua placa de vídeo suporta Resizable BAR, mas ele está desligado na BIOS. Ativá-lo permite que o processador envie texturas diretamente para a VRAM, estabilizando os FPS mínimos." }
+        
         $recs.Add([PSCustomObject]@{
-            Titulo = "CONFIGURAÇÃO NA BIOS: Ativar o Resizable BAR (ReBAR)"
+            Titulo = $rebarTitle
             Categoria = "AJUSTE DE ALTO IMPACTO (SEM CUSTO)"
             Nivel = "danger"
-            Desc = "Sua placa de vídeo suporta Resizable BAR, mas ele está desligado na BIOS. Ativá-lo permite que o processador envie texturas diretamente para a VRAM, estabilizando os FPS mínimos."
+            Desc = $rebarDesc
         })
     } else {
+        $rebarSuccessTitle = if ($gpuVen -eq "AMD") { "AMD SMART ACCESS MEMORY: SAM Ativado e Funcional" } else { "RESIZABLE BAR: Ativado e Operando em Capacidade Total" }
         $recs.Add([PSCustomObject]@{
-            Titulo = "RESIZABLE BAR: Ativado e Operando em Capacidade Total"
+            Titulo = $rebarSuccessTitle
             Categoria = "PONTO FORTE DO COMPUTADOR"
             Nivel = "success"
             Desc = "A CPU tem acesso direto e irrestrito à VRAM da sua placa de vídeo ($($global:DiagnosticState.BarTotal) MiB mapeados)."
@@ -1074,21 +1131,32 @@ $BtnReescanear.Add_Click({
 $BtnGuiaRebar.Add_Click({
     [System.Windows.MessageBox]::Show(
 @"
-=== GUIA RÁPIDO PARA ATIVAR O RESIZABLE BAR NA BIOS ===
+=== GUIA PARA ATIVAR O RESIZABLE BAR / AMD SAM NA BIOS ===
 
+• NVIDIA: Resizable BAR (ReBAR)
+• AMD Radeon: Smart Access Memory (SAM)
+• Intel: Intel Arc Resizable BAR
+
+PASSO A PASSO NA BIOS:
 1. Reinicie o computador e fique pressionando 'Del' ou 'F2' para entrar na BIOS.
 2. Certifique-se de que o CSM está DESATIVADO (Boot -> CSM -> Disabled).
 3. Localize as opções da GPU:
    • ASUS: Advanced -> PCI Subsystem Settings
      - Above 4G Decoding: Enabled
      - Re-Size BAR Support: Auto ou Enabled
-   • GIGABYTE: Settings -> IO Ports -> Above 4G Decoding (Enabled) e Re-Size BAR (Auto)
-   • MSI: Settings -> Advanced -> PCIe Subsystem Settings -> Re-Size BAR (Enabled)
-   • ASROCK: Advanced -> Chipset Configuration -> Re-Size BAR (Enabled)
+   • GIGABYTE: Settings -> IO Ports
+     - Above 4G Decoding: Enabled
+     - Re-Size BAR: Auto
+   • MSI: Settings -> Advanced -> PCIe Subsystem Settings
+     - Above 4G Decoding: Enabled
+     - Re-Size BAR: Enabled
+   • ASROCK: Advanced -> Chipset Configuration
+     - Above 4G Decoding: Enabled
+     - Re-Size BAR: Enabled
 4. Pressione F10 para salvar e reiniciar.
 
 Ao voltar para o Windows, abra este programa e clique em 'Reexaminar PC'!
-"@, "Como Ativar o Resizable BAR", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+"@, "Como Ativar Resizable BAR / AMD SAM", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
 })
 
 # Button: Abrir VBS / Isolamento do Núcleo
@@ -1131,15 +1199,27 @@ $BtnAtivarPower.Add_Click({
 # Button: Limpar Caches com Segurança
 $BtnLimparTudo.Add_Click({
     $confirm = [System.Windows.MessageBox]::Show(
-        "Deseja limpar os arquivos temporários e o cache acumulado de shaders da NVIDIA (DXCache)?`n`nIsso liberará espaço em disco e garantirá que apenas shaders atualizados sejam compilados pelos jogos.",
-        "Confirmar Limpeza",
+        "Deseja limpar os arquivos temporários e caches de shaders acumulados (NVIDIA, AMD Radeon e Intel Arc)?`n`nIsso liberará espaço no SSD e garantirá que apenas shaders limpos sejam compilados pelos jogos.",
+        "Confirmar Limpeza Universal de Caches",
         [System.Windows.MessageBoxButton]::YesNo,
         [System.Windows.MessageBoxImage]::Question
     )
     if ($confirm -eq [System.Windows.MessageBoxResult]::Yes) {
         $freed = 0
         $pathsToClean = @(
+            # NVIDIA
             (Join-Path $env:LOCALAPPDATA "NVIDIA\DXCache"),
+            (Join-Path $env:LOCALAPPDATA "NVIDIA\GLCache"),
+            (Join-Path $env:LOCALAPPDATA "D3DSCache"),
+            # AMD Radeon
+            (Join-Path $env:LOCALAPPDATA "AMD\DxCache"),
+            (Join-Path $env:LOCALAPPDATA "AMD\GLCache"),
+            (Join-Path $env:LOCALAPPDATA "AMD\D3DCache"),
+            (Join-Path $env:LOCALAPPDATA "AMD\OglCache"),
+            # Intel Arc
+            (Join-Path $env:LOCALAPPDATA "Intel\ShaderCache"),
+            (Join-Path $env:LOCALAPPDATA "Intel\DXCache"),
+            # Windows & CrashDumps
             $env:TEMP,
             (Join-Path $env:LOCALAPPDATA "CrashDumps")
         )
