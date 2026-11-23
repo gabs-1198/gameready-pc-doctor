@@ -54,11 +54,17 @@ O **GameReady PC Doctor** é um utilitário portátil profissional de código ab
 * **DNS Gamer de 1-Clique:** Aplica servidores de alta performance com rotas otimizadas (**Cloudflare 1.1.1.1** ou **Google 8.8.8.8**) com opção de retorno a DHCP instantâneo.
 * **Diagnóstico de Ping em Tempo Real & Flush DNS:** Teste de latência ao vivo nos backbones e limpeza profunda de cache de rotas e pilha Winsock.
 
-### 8. 💡 Consultor de Hardware & Upgrades Personalizados
+### 8. 🎯 Calculadora Visual de FPS por Jogo (Estimador de Performance 1080p & 1440p)
+* **Cálculo Dinâmico Multi-Fator:** Cruza o modelo exato do Processador (CPU), Placa de Vídeo (GPU dedicada ou integrada), largura de banda da RAM (Dual vs Single Channel) e otimizações ativas (ReBAR/SAM, VBS, Plano de Energia).
+* **Catálogo de 8 Jogos Populares:** Estima a **Média 1080p (Full HD)**, **1% Low (Estabilidade)** e **Média 1440p (Quad HD)** com barras de progresso e comparação com a taxa de Hz do monitor para:
+  * *Valorant*, *Counter-Strike 2 (CS2)*, *League of Legends*, *Fortnite*, *GTA V / FiveM (Roleplay)*, *Call of Duty: Warzone*, *Red Dead Redemption 2* e *Cyberpunk 2077*.
+* **Integrado ao Laudo Técnico (HTML/PDF):** O cliente recebe no relatório impresso ou PDF a tabela completa de desempenho estimado da máquina dele.
+
+### 9. 💡 Consultor de Hardware & Upgrades Personalizados
 * Classifica o PC em níveis (*Alta Performance Gamer*, *Intermediário*, *PC Básico*).
 * Gera recomendações dinâmicas de acordo com a máquina inspecionada (alertas de Single-Channel de RAM, saúde térmica da GPU, sistema em HD mecânico, SSD lotado ou falta de placa de vídeo dedicada).
 
-### 9. ✅ Verificador de Sucesso (Validação Automática)
+### 10. ✅ Verificador de Sucesso (Validação Automática)
 * Checklist de **7 pilares essenciais de performance**, pontuando o computador de 0% a 100% com selos de confirmação.
 
 ---

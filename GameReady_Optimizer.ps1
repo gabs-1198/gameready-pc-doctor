@@ -11,7 +11,7 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, Sys
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="GameReady PC Doctor - Diagnóstico, Otimização e Consultor de Upgrades" 
-        Height="860" Width="1040" 
+        Height="860" Width="1140" 
         WindowStartupLocation="CenterScreen" 
         Background="#0F111A" 
         Foreground="#ECEFF4"
@@ -46,13 +46,13 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, Sys
         <Style TargetType="TabItem">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="#94A3B8"/>
-            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="18,10"/>
+            <Setter Property="Padding" Value="12,10"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
-                        <Border Name="Border" Background="{TemplateBinding Background}" BorderThickness="0,0,0,3" BorderBrush="Transparent" Margin="0,0,15,0">
+                        <Border Name="Border" Background="{TemplateBinding Background}" BorderThickness="0,0,0,3" BorderBrush="Transparent" Margin="0,0,8,0">
                             <ContentPresenter ContentSource="Header" Margin="{TemplateBinding Padding}"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -503,6 +503,38 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, Sys
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
+
+            <!-- TAB 6: CALCULADORA VISUAL DE FPS POR JOGO -->
+            <TabItem Header="🎯 Estimador de FPS">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,15,0,0">
+                    <StackPanel>
+                        <!-- Top Header Banner for FPS Estimator -->
+                        <Border Background="#1E2235" CornerRadius="12" Padding="20" Margin="0,0,0,18">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <TextBlock Text="🎯 Calculadora Visual de Performance &amp; FPS por Jogo" FontSize="18" FontWeight="Bold" Foreground="#38BDF8"/>
+                                        <Border Background="#8B5CF6" CornerRadius="6" Padding="8,2" Margin="10,2,0,2">
+                                            <TextBlock Text="1080p &amp; 1440p" FontSize="11" FontWeight="Bold" Foreground="White"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Name="TxtFpsSummary" Text="Calculando estimativa de FPS para a sua combinação de CPU, GPU, RAM e otimizações..." FontSize="13" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" Name="BadgeFpsBoost" Background="#065F46" CornerRadius="8" Padding="16,8" VerticalAlignment="Center" Margin="12,0,0,0">
+                                    <TextBlock Name="TxtBadgeFpsBoost" Text="MÁXIMO FPS ATIVO" FontSize="13" FontWeight="Bold" Foreground="#34D399"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- Dynamic FPS Game Cards Container -->
+                        <UniformGrid Name="ContainerFpsGames" Columns="2" VerticalAlignment="Top"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
         </TabControl>
     </Grid>
 </Window>
@@ -622,6 +654,12 @@ $TxtBadgePing = $window.FindName("TxtBadgePing")
 $TxtDescPing = $window.FindName("TxtDescPing")
 $BtnTestPing = $window.FindName("BtnTestPing")
 $BtnFlushDns = $window.FindName("BtnFlushDns")
+
+# Tab 6 Estimador de FPS
+$TxtFpsSummary = $window.FindName("TxtFpsSummary")
+$BadgeFpsBoost = $window.FindName("BadgeFpsBoost")
+$TxtBadgeFpsBoost = $window.FindName("TxtBadgeFpsBoost")
+$ContainerFpsGames = $window.FindName("ContainerFpsGames")
 
 # Helper function to set badge colors
 function Set-BadgeColor($badge, $textBlock, $text, $type) {
@@ -1117,6 +1155,9 @@ function Run-AuditScan {
 
     # Update Tab 5: Rede & Ping Gamer
     Update-NetworkTab
+
+    # Update Tab 6: Calculadora Visual de FPS por Jogo
+    Update-FpsEstimatorTab
 }
 
 # Function: Populate Tab 2 (Consultor de Upgrades & Avaliação Individual)
@@ -1805,6 +1846,283 @@ function Update-NetworkTab {
     }
 }
 
+# Function: Populate Tab 6 (Calculadora Visual de FPS por Jogo)
+function Update-FpsEstimatorTab {
+    $ContainerFpsGames.Children.Clear()
+
+    $cpuName = $global:DiagnosticState.Cpu.Name
+    $cpuCores = $global:DiagnosticState.Cpu.Cores
+    $gpuName = $global:DiagnosticState.Gpu.Name
+    $isIntegrated = $global:DiagnosticState.Gpu.IsIntegrated
+    $ramGB = $global:DiagnosticState.RAM.Cap
+    $ramDual = $global:DiagnosticState.RAM.Dual
+    $ramSpeed = $global:DiagnosticState.RAM.Speed
+    $monitorHz = $global:DiagnosticState.Monitor.MaxHz
+    if (-not $monitorHz -or $monitorHz -lt 60) { $monitorHz = 60 }
+
+    # 1. Calculate CPU Performance Index (1.0 = Ryzen 5 5600 / i5-12400 baseline)
+    $cpuFactor = 1.0
+    if ($cpuName -match "9800X3D|7800X3D|7950X3D|14900K|13900K") {
+        $cpuFactor = 1.45
+    } elseif ($cpuName -match "5800X3D|5700X3D|14700K|13700K|9700X|7700X|7900X") {
+        $cpuFactor = 1.30
+    } elseif ($cpuName -match "5700X|5800X|5900X|7600|7500F|13600K|14600K|12700K|12900K") {
+        $cpuFactor = 1.15
+    } elseif ($cpuName -match "5600|12400|13400|14400|12600|11700|11900|10700|10900|3700X|3800X") {
+        $cpuFactor = 1.00
+    } elseif ($cpuName -match "5500|3600|4500|10400|11400|12100|13100|14100|9700|8700") {
+        $cpuFactor = 0.85
+    } elseif ($cpuCores -ge 6) {
+        $cpuFactor = 0.78
+    } elseif ($cpuCores -eq 4) {
+        $cpuFactor = 0.60
+    } else {
+        $cpuFactor = 0.40
+    }
+
+    # 2. Calculate GPU Performance Index (1.0 = RTX 3060 / RTX 4060 / RX 6600 XT / RX 7600 baseline)
+    $gpuFactor = 1.0
+    if ($isIntegrated) {
+        if ($gpuName -match "780M|890M|680M|Arc") { $gpuFactor = 0.35 }
+        else { $gpuFactor = 0.22 }
+    } elseif ($gpuName -match "4090|5090") {
+        $gpuFactor = 2.40
+    } elseif ($gpuName -match "4080|7900\s*XTX|5080") {
+        $gpuFactor = 2.05
+    } elseif ($gpuName -match "4070\s*Ti|7900\s*XT|3090\s*Ti|3090") {
+        $gpuFactor = 1.75
+    } elseif ($gpuName -match "4070|7800\s*XT|6900\s*XT|6950\s*XT|3080") {
+        $gpuFactor = 1.52
+    } elseif ($gpuName -match "4060\s*Ti|3070|7700\s*XT|6800") {
+        $gpuFactor = 1.25
+    } elseif ($gpuName -match "6700\s*XT|6750\s*XT|3060\s*Ti|2080\s*Ti") {
+        $gpuFactor = 1.15
+    } elseif ($gpuName -match "4060|3060|7600|6600\s*XT|6650\s*XT|2070|2080|A770|A750") {
+        $gpuFactor = 1.00
+    } elseif ($gpuName -match "6600|3050|2060|1660|1080|1070|5700\s*XT|5600\s*XT|A580") {
+        $gpuFactor = 0.76
+    } elseif ($gpuName -match "1650|1060|580|570|6500\s*XT|5500\s*XT") {
+        $gpuFactor = 0.54
+    } elseif ($gpuName -match "1050|6400|560|550|960|970|750\s*Ti") {
+        $gpuFactor = 0.38
+    } else {
+        $gpuFactor = 0.65
+    }
+
+    # 3. System & Optimization Modifiers
+    $sysFactor = 1.0
+    $potentialGainPct = 0
+
+    if (-not $ramDual) {
+        $sysFactor *= 0.85
+        $potentialGainPct += 15
+    } elseif ($ramSpeed -ge 3200) {
+        $sysFactor *= 1.03
+    } else {
+        $potentialGainPct += 3
+    }
+
+    if ($ramGB -lt 16) {
+        $sysFactor *= 0.86
+        $potentialGainPct += 14
+    }
+
+    if ($global:DiagnosticState.Rebar) {
+        $sysFactor *= 1.05
+    } elseif (-not $isIntegrated) {
+        $potentialGainPct += 6
+    }
+
+    if (-not $global:DiagnosticState.VBS) {
+        $sysFactor *= 1.04
+    } else {
+        $potentialGainPct += 5
+    }
+
+    if (-not $global:DiagnosticState.Power) {
+        $sysFactor *= 0.97
+        $potentialGainPct += 3
+    }
+
+    # Update Top Banner Summary
+    if ($potentialGainPct -ge 5) {
+        $TxtFpsSummary.Text = "Hardware analisado: $cpuName + $gpuName ($ramGB GB RAM). Ativando as otimizações e upgrades recomendados neste app, seu PC pode ganhar até +$potentialGainPct% de FPS e estabilidade!"
+        $BadgeFpsBoost.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#78350F")
+        $TxtBadgeFpsBoost.Text = "⚡ +$potentialGainPct% FPS POTENCIAL"
+        $TxtBadgeFpsBoost.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#FCD34D")
+    } else {
+        $TxtFpsSummary.Text = "Hardware analisado: $cpuName + $gpuName ($ramGB GB RAM). Seu sistema já está operando com todas as otimizações críticas ativas no teto máximo deste hardware!"
+        $BadgeFpsBoost.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#065F46")
+        $TxtBadgeFpsBoost.Text = "🚀 TETO MÁXIMO DE FPS"
+        $TxtBadgeFpsBoost.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#34D399")
+    }
+
+    # 4. Game Profiles Catalog
+    $gamesCatalog = @(
+        @{ Name = "🎯 Valorant"; Preset = "Competitivo (1080p / 1440p)"; Base1080 = 330; CpuWeight = 0.65; GpuWeight = 0.35; Ratio1440 = 0.82 },
+        @{ Name = "🔫 Counter-Strike 2 (CS2)"; Preset = "Competitivo / Sombras Médias"; Base1080 = 220; CpuWeight = 0.55; GpuWeight = 0.45; Ratio1440 = 0.76 },
+        @{ Name = "⚔️ League of Legends"; Preset = "Qualidade Muito Alta"; Base1080 = 260; CpuWeight = 0.65; GpuWeight = 0.35; Ratio1440 = 0.85 },
+        @{ Name = "🏗️ Fortnite"; Preset = "Modo Desempenho / Competitivo"; Base1080 = 230; CpuWeight = 0.55; GpuWeight = 0.45; Ratio1440 = 0.76 },
+        @{ Name = "🚓 GTA V / FiveM (Roleplay)"; Preset = "Muito Alto / Cidade Cheia"; Base1080 = 115; CpuWeight = 0.50; GpuWeight = 0.50; Ratio1440 = 0.75 },
+        @{ Name = "🪂 Call of Duty: Warzone"; Preset = "Competitivo + DLSS/FSR Qualidade"; Base1080 = 128; CpuWeight = 0.45; GpuWeight = 0.55; Ratio1440 = 0.74 },
+        @{ Name = "🐎 Red Dead Redemption 2"; Preset = "Qualidade Alta / Texturas Ultra"; Base1080 = 88; CpuWeight = 0.25; GpuWeight = 0.75; Ratio1440 = 0.70 },
+        @{ Name = "🤖 Cyberpunk 2077"; Preset = "Qualidade Alta + Upscaling"; Base1080 = 92; CpuWeight = 0.28; GpuWeight = 0.72; Ratio1440 = 0.70 }
+    )
+
+    $estimatesList = [System.Collections.Generic.List[PSObject]]::new()
+
+    for ($i = 0; $i -lt $gamesCatalog.Count; $i++) {
+        $g = $gamesCatalog[$i]
+        $weightedPerf = (($cpuFactor * $g.CpuWeight) + ($gpuFactor * $g.GpuWeight)) * $sysFactor
+        if ($isIntegrated -and $g.GpuWeight -ge 0.50) {
+            $weightedPerf = ($gpuFactor * 0.85 + $cpuFactor * 0.15) * $sysFactor
+        }
+
+        $fps1080 = [math]::Max(15, [int][math]::Round($g.Base1080 * $weightedPerf))
+        $lowMult = if ($ramDual) { 0.74 } else { 0.58 }
+        $fps1Low = [math]::Max(10, [int][math]::Round($fps1080 * $lowMult))
+        $fps1440 = [math]::Max(12, [int][math]::Round($fps1080 * $g.Ratio1440))
+
+        $tierText = ""
+        $tierBg = ""
+        $tierFg = ""
+        $barColor = ""
+        if ($fps1080 -ge 144) {
+            $tierText = "🟢 144+ FPS COMPETITIVO"
+            $tierBg = "#065F46"; $tierFg = "#34D399"; $barColor = "#10B981"
+        } elseif ($fps1080 -ge 60) {
+            $tierText = "🔵 60+ FPS FLUIDO"
+            $tierBg = "#1E3A8A"; $tierFg = "#93C5FD"; $barColor = "#38BDF8"
+        } elseif ($fps1080 -ge 30) {
+            $tierText = "🟡 30+ FPS JOGÁVEL"
+            $tierBg = "#78350F"; $tierFg = "#FCD34D"; $barColor = "#F59E0B"
+        } else {
+            $tierText = "🔴 ABAIXO DE 30 FPS"
+            $tierBg = "#7F1D1D"; $tierFg = "#FCA5A5"; $barColor = "#EF4444"
+        }
+
+        $estimatesList.Add([PSCustomObject]@{
+            Name = $g.Name
+            Preset = $g.Preset
+            Fps1080 = $fps1080
+            Fps1Low = $fps1Low
+            Fps1440 = $fps1440
+            TierText = $tierText
+            IsHigh = ($fps1080 -ge 60)
+        })
+
+        # Build WPF Card
+        $card = New-Object Windows.Controls.Border
+        $card.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#1E2235")
+        $card.CornerRadius = New-Object Windows.CornerRadius(12)
+        $card.Padding = New-Object Windows.Thickness(18)
+        $marginRight = if (($i % 2) -eq 0) { 8 } else { 0 }
+        $marginLeft = if (($i % 2) -eq 1) { 8 } else { 0 }
+        $card.Margin = New-Object Windows.Thickness($marginLeft, 0, $marginRight, 14)
+
+        $stack = New-Object Windows.Controls.StackPanel
+
+        # Header Row
+        $hdrGrid = New-Object Windows.Controls.Grid
+        $c0 = New-Object Windows.Controls.ColumnDefinition; $c0.Width = New-Object Windows.GridLength(1, [Windows.GridUnitType]::Star)
+        $c1 = New-Object Windows.Controls.ColumnDefinition; $c1.Width = [Windows.GridLength]::Auto
+        $null = $hdrGrid.ColumnDefinitions.Add($c0)
+        $null = $hdrGrid.ColumnDefinitions.Add($c1)
+
+        $titleTxt = New-Object Windows.Controls.TextBlock
+        $titleTxt.Text = $g.Name
+        $titleTxt.FontSize = 15
+        $titleTxt.FontWeight = "Bold"
+        $titleTxt.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#F8FAFC")
+        [Windows.Controls.Grid]::SetColumn($titleTxt, 0)
+        $null = $hdrGrid.Children.Add($titleTxt)
+
+        $badge = New-Object Windows.Controls.Border
+        $badge.Background = [Windows.Media.BrushConverter]::new().ConvertFromString($tierBg)
+        $badge.CornerRadius = New-Object Windows.CornerRadius(6)
+        $badge.Padding = New-Object Windows.Thickness(8, 3, 8, 3)
+        $badgeTxt = New-Object Windows.Controls.TextBlock
+        $badgeTxt.Text = $tierText
+        $badgeTxt.FontSize = 11
+        $badgeTxt.FontWeight = "Bold"
+        $badgeTxt.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString($tierFg)
+        $badge.Child = $badgeTxt
+        [Windows.Controls.Grid]::SetColumn($badge, 1)
+        $null = $hdrGrid.Children.Add($badge)
+
+        $null = $stack.Children.Add($hdrGrid)
+
+        # Preset Subtitle
+        $presetTxt = New-Object Windows.Controls.TextBlock
+        $presetTxt.Text = "Qualidade: $($g.Preset)"
+        $presetTxt.FontSize = 12
+        $presetTxt.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#94A3B8")
+        $presetTxt.Margin = New-Object Windows.Thickness(0, 4, 0, 12)
+        $null = $stack.Children.Add($presetTxt)
+
+        # FPS Metrics Row
+        $metricsGrid = New-Object Windows.Controls.Grid
+        $mc0 = New-Object Windows.Controls.ColumnDefinition; $mc0.Width = New-Object Windows.GridLength(1, [Windows.GridUnitType]::Star)
+        $mc1 = New-Object Windows.Controls.ColumnDefinition; $mc1.Width = New-Object Windows.GridLength(1, [Windows.GridUnitType]::Star)
+        $mc2 = New-Object Windows.Controls.ColumnDefinition; $mc2.Width = New-Object Windows.GridLength(1, [Windows.GridUnitType]::Star)
+        $null = $metricsGrid.ColumnDefinitions.Add($mc0)
+        $null = $metricsGrid.ColumnDefinitions.Add($mc1)
+        $null = $metricsGrid.ColumnDefinitions.Add($mc2)
+
+        # Box 1: 1080p Average
+        $b1 = New-Object Windows.Controls.StackPanel
+        $b1Lbl = New-Object Windows.Controls.TextBlock; $b1Lbl.Text = "MÉDIA 1080p (Full HD)"; $b1Lbl.FontSize = 10; $b1Lbl.FontWeight = "Bold"; $b1Lbl.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#94A3B8")
+        $b1Val = New-Object Windows.Controls.TextBlock; $b1Val.Text = "~$fps1080 FPS"; $b1Val.FontSize = 18; $b1Val.FontWeight = "Bold"; $b1Val.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString($barColor)
+        $null = $b1.Children.Add($b1Lbl); $null = $b1.Children.Add($b1Val)
+        [Windows.Controls.Grid]::SetColumn($b1, 0); $null = $metricsGrid.Children.Add($b1)
+
+        # Box 2: 1% Low
+        $b2 = New-Object Windows.Controls.StackPanel
+        $b2Lbl = New-Object Windows.Controls.TextBlock; $b2Lbl.Text = "1% LOW (Estabilidade)"; $b2Lbl.FontSize = 10; $b2Lbl.FontWeight = "Bold"; $b2Lbl.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#94A3B8")
+        $b2Val = New-Object Windows.Controls.TextBlock; $b2Val.Text = "~$fps1Low FPS"; $b2Val.FontSize = 16; $b2Val.FontWeight = "SemiBold"; $b2Val.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#E2E8F0")
+        $null = $b2.Children.Add($b2Lbl); $null = $b2.Children.Add($b2Val)
+        [Windows.Controls.Grid]::SetColumn($b2, 1); $null = $metricsGrid.Children.Add($b2)
+
+        # Box 3: 1440p Quad HD
+        $b3 = New-Object Windows.Controls.StackPanel
+        $b3Lbl = New-Object Windows.Controls.TextBlock; $b3Lbl.Text = "MÉDIA 1440p (Quad HD)"; $b3Lbl.FontSize = 10; $b3Lbl.FontWeight = "Bold"; $b3Lbl.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#94A3B8")
+        $b3Val = New-Object Windows.Controls.TextBlock; $b3Val.Text = "~$fps1440 FPS"; $b3Val.FontSize = 16; $b3Val.FontWeight = "SemiBold"; $b3Val.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#38BDF8")
+        $null = $b3.Children.Add($b3Lbl); $null = $b3.Children.Add($b3Val)
+        [Windows.Controls.Grid]::SetColumn($b3, 2); $null = $metricsGrid.Children.Add($b3)
+
+        $null = $stack.Children.Add($metricsGrid)
+
+        # Visual Progress Bar
+        $pBar = New-Object Windows.Controls.ProgressBar
+        $pBar.Minimum = 0
+        $pBar.Maximum = 300
+        $pBar.Value = [math]::Min(300, $fps1080)
+        $pBar.Height = 8
+        $pBar.Margin = New-Object Windows.Thickness(0, 12, 0, 8)
+        $pBar.Background = [Windows.Media.BrushConverter]::new().ConvertFromString("#0F111A")
+        $pBar.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString($barColor)
+        $pBar.BorderThickness = New-Object Windows.Thickness(0)
+        $null = $stack.Children.Add($pBar)
+
+        # Monitor Sync Note
+        $monNote = New-Object Windows.Controls.TextBlock
+        $monNote.FontSize = 11
+        if ($fps1080 -ge $monitorHz) {
+            $monNote.Text = "✅ Aproveita 100% da taxa máxima do seu monitor ($monitorHz Hz)."
+            $monNote.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#34D399")
+        } else {
+            $monNote.Text = "ℹ️ Rodará a ~$fps1080 FPS no seu monitor de $monitorHz Hz."
+            $monNote.Foreground = [Windows.Media.BrushConverter]::new().ConvertFromString("#94A3B8")
+        }
+        $null = $stack.Children.Add($monNote)
+
+        $card.Child = $stack
+        $null = $ContainerFpsGames.Children.Add($card)
+    }
+
+    $global:DiagnosticState.FpsEstimates = $estimatesList
+}
+
 # EVENT HANDLERS
 
 # Button: Reexaminar PC
@@ -2241,6 +2559,14 @@ $BtnLaudo.Add_Click({
         $netDnsStatus = $diag.Network.DnsType
         $netAdapterName = $diag.Network.AdapterName
 
+        $fpsRowsHtml = ""
+        if ($diag.FpsEstimates) {
+            foreach ($fe in $diag.FpsEstimates) {
+                $bClass = if ($fe.Fps1080 -ge 60) { "badge-success" } elseif ($fe.Fps1080 -ge 30) { "badge-warning" } else { "badge-danger" }
+                $fpsRowsHtml += "<tr><td><b>$($fe.Name)</b><br/><span style='color:#94A3B8;font-size:11px;'>$($fe.Preset)</span></td><td><b>~$($fe.Fps1080) FPS</b> (1% Low: ~$($fe.Fps1Low))</td><td>~$($fe.Fps1440) FPS</td><td><span class='badge $bClass'>$($fe.TierText)</span></td></tr>`n"
+            }
+        }
+
         $html = @"
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -2409,6 +2735,17 @@ $BtnLaudo.Add_Click({
                 <td><span class="badge badge-success">Conectado</span></td>
                 <td>$netAdapterName</td>
             </tr>
+        </table>
+
+        <div class="section-title">🎯 Estimativa de Desempenho em Jogos (1080p Full HD &amp; 1440p Quad HD)</div>
+        <table>
+            <tr>
+                <th width="35%">Jogo &amp; Preset Gráfico</th>
+                <th width="25%">Média 1080p (Full HD)</th>
+                <th width="18%">Média 1440p</th>
+                <th>Classificação</th>
+            </tr>
+            $fpsRowsHtml
         </table>
 
         <div class="footer">
