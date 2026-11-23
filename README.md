@@ -22,12 +22,14 @@ O **GameReady PC Doctor** é um utilitário portátil profissional de código ab
   * Auditoria visual dos 7 pilares de performance com selos coloridos.
   * Botão embutido de **Imprimir / Salvar em PDF** formatado para folha A4. Ideal para técnicos entregarem a clientes após serviços de formatação ou montagem!
 
-### 2. 🛡️ Segurança: Ponto de Restauração Automático
-* Permite criar um **Ponto de Restauração do Windows** em 1 clique antes de qualquer alteração, garantindo 100% de segurança e capacidade de reversão.
+### 2. 🛡️ Segurança: Ponto de Restauração & Reinício Seguro
+* **Ponto de Restauração do Windows:** Cria com 1 clique uma imagem segura do sistema antes de qualquer alteração, garantindo capacidade total de reversão.
+* **Confirmação Automática de Reinício:** Sempre que qualquer mudança no sistema for aplicada (Plano de Energia, Caches de Shaders, Mira 1:1, Vanguard VGC, Testsigning, Nagle ou DNS), o aplicativo pergunta se você deseja reiniciar o computador imediatamente para que os novos parâmetros entrem em vigor no Windows e nos jogos.
 
 ### 3. 🎯 Latência & Mira 1:1 Competitiva
 * **Modo de Jogo do Windows:** Garante que os processos de jogos tenham prioridade máxima de CPU.
 * **Mira 1:1 (Calibração do Mouse):** Detecta e desativa o recurso *"Aprimorar precisão do ponteiro"* (aceleração do mouse do Windows), garantindo mira consistente em escala 1:1 em jogos competitivos (CS2, Valorant, Warzone).
+* **Auditoria de Inicialização (Habilitados vs Desabilitados):** Inspeciona a chave `StartupApproved` do registro informando exatamente quantos aplicativos estão habilitados e quantos estão desabilitados no boot, permitindo visualizar a lista completa e abrir o Gerenciador de Tarefas.
 
 ### 4. 🎮 Suporte Universal Multi-GPU & Shaders
 * **NVIDIA:** Leitura direta de VRAM com Resizable BAR (ReBAR) e monitoramento de temperatura.

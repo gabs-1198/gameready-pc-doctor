@@ -197,8 +197,8 @@ Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, Sys
                                         <TextBlock Name="TxtBadgeStartup" Text="Checando..." FontSize="12" FontWeight="Bold" Foreground="White"/>
                                     </Border>
                                 </Grid>
-                                <TextBlock Name="TxtDescStartup" Text="Verificando se há lançadores e overlays pesando no boot..." TextWrapping="Wrap" Foreground="#94A3B8" FontSize="12" Margin="0,0,0,14" Height="42"/>
-                                <Button Name="BtnGerenciadorTarefas" Content="⚡ Abrir Inicialização do Windows" Background="#334155"/>
+                                <TextBlock Name="TxtDescStartup" Text="Verificando quantos aplicativos estão habilitados e desabilitados no boot..." TextWrapping="Wrap" Foreground="#94A3B8" FontSize="12" Margin="0,0,0,14" MinHeight="42"/>
+                                <Button Name="BtnGerenciadorTarefas" Content="⚡ Ver Lista &amp; Ajustar Inicialização" Background="#334155"/>
                             </StackPanel>
                         </Border>
 
@@ -646,6 +646,20 @@ function Set-BadgeColor($badge, $textBlock, $text, $type) {
     }
 }
 
+# Helper function: Prompt user to restart computer after changes
+function Ask-RestartPrompt($actionDescription) {
+    $msg = "$actionDescription`n`nDeseja REINICIAR o computador agora para que as alterações entrem em vigor com efeito total e imediato no Windows e nos jogos?`n`n(Recomendamos reiniciar para recarregar todos os novos parâmetros do sistema)."
+    $choice = [System.Windows.MessageBox]::Show(
+        $msg,
+        "Deseja Reiniciar o Computador?",
+        [System.Windows.MessageBoxButton]::YesNo,
+        [System.Windows.MessageBoxImage]::Question
+    )
+    if ($choice -eq [System.Windows.MessageBoxResult]::Yes) {
+        Restart-Computer -Force
+    }
+}
+
 # Global state to hold scan results
 $global:DiagnosticState = @{}
 
@@ -923,17 +937,88 @@ function Run-AuditScan {
         $TxtDescLixo.Text = "Seu SSD está livre de acúmulos pesados de shaders ou temporários."
     }
 
-    # 10. Startup Bloat Check
-    $startupApps = Get-CimInstance Win32_StartupCommand -ErrorAction SilentlyContinue
-    $startupCount = $startupApps.Count
-    $global:DiagnosticState.StartupCount = $startupCount
+    # 10. Startup Bloat Check (Enabled vs Disabled)
+    $allStartup = [System.Collections.Generic.List[PSObject]]::new()
 
-    if ($startupCount -gt 10) {
-        Set-BadgeColor $BadgeStartup $TxtBadgeStartup "$startupCount APPS NO BOOT" "warning"
-        $TxtDescStartup.Text = "Muitos programas iniciando com o Windows. Desative lançadores e utilitários que não usa diariamente."
+    function Get-StartupEntryStatus($name, $isFolder, $isHKLM, $subKey = "Run") {
+        $regKey = if ($isHKLM) {
+            if ($isFolder) { "HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder" }
+            else { "HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\$subKey" }
+        } else {
+            if ($isFolder) { "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder" }
+            else { "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\$subKey" }
+        }
+        if (Test-Path $regKey) {
+            $val = (Get-ItemProperty -Path $regKey -Name $name -ErrorAction SilentlyContinue).$name
+            if ($null -ne $val -and $val.Length -gt 0) {
+                if (($val[0] -band 1) -eq 1) { return "Disabled" }
+                else { return "Enabled" }
+            }
+        }
+        return "Enabled"
+    }
+
+    # 10.1 HKCU Run
+    $hkcuRun = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
+    if (Test-Path $hkcuRun) {
+        (Get-ItemProperty $hkcuRun).PSObject.Properties | Where-Object { $_.Name -notmatch "^PS" } | ForEach-Object {
+            $status = Get-StartupEntryStatus $_.Name $false $false "Run"
+            $allStartup.Add([PSCustomObject]@{ Name = $_.Name; Status = $status; Location = "HKCU Run" })
+        }
+    }
+
+    # 10.2 HKLM Run
+    $hklmRun = "HKLM:\Software\Microsoft\Windows\CurrentVersion\Run"
+    if (Test-Path $hklmRun) {
+        (Get-ItemProperty $hklmRun).PSObject.Properties | Where-Object { $_.Name -notmatch "^PS" } | ForEach-Object {
+            $status = Get-StartupEntryStatus $_.Name $false $true "Run"
+            $allStartup.Add([PSCustomObject]@{ Name = $_.Name; Status = $status; Location = "HKLM Run" })
+        }
+    }
+
+    # 10.3 HKLM Wow6432Node Run
+    $hklmWowRun = "HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Run"
+    if (Test-Path $hklmWowRun) {
+        (Get-ItemProperty $hklmWowRun).PSObject.Properties | Where-Object { $_.Name -notmatch "^PS" } | ForEach-Object {
+            $status = Get-StartupEntryStatus $_.Name $false $true "Run32"
+            $allStartup.Add([PSCustomObject]@{ Name = $_.Name; Status = $status; Location = "HKLM Wow6432 Run" })
+        }
+    }
+
+    # 10.4 Startup Folders
+    $userStartup = [Environment]::GetFolderPath("Startup")
+    if (Test-Path $userStartup) {
+        Get-ChildItem -Path $userStartup -File -ErrorAction SilentlyContinue | ForEach-Object {
+            $status = Get-StartupEntryStatus $_.Name $true $false
+            $allStartup.Add([PSCustomObject]@{ Name = $_.Name; Status = $status; Location = "User Startup Folder" })
+        }
+    }
+    $commonStartup = [Environment]::GetFolderPath("CommonStartup")
+    if (Test-Path $commonStartup) {
+        Get-ChildItem -Path $commonStartup -File -ErrorAction SilentlyContinue | ForEach-Object {
+            $status = Get-StartupEntryStatus $_.Name $true $true
+            $allStartup.Add([PSCustomObject]@{ Name = $_.Name; Status = $status; Location = "Common Startup Folder" })
+        }
+    }
+
+    $enabledCount = ($allStartup | Where-Object { $_.Status -eq "Enabled" }).Count
+    $disabledCount = ($allStartup | Where-Object { $_.Status -eq "Disabled" }).Count
+    $totalStartupCount = $allStartup.Count
+
+    $global:DiagnosticState.Startup = @{
+        Total = $totalStartupCount
+        Enabled = $enabledCount
+        Disabled = $disabledCount
+        Items = $allStartup
+    }
+    $global:DiagnosticState.StartupCount = $enabledCount
+
+    if ($enabledCount -gt 7) {
+        Set-BadgeColor $BadgeStartup $TxtBadgeStartup "$enabledCount HABILITADOS ($disabledCount DESATIVADOS)" "warning"
+        $TxtDescStartup.Text = "$enabledCount aplicativos habilitados e $disabledCount desabilitados iniciando com o Windows (Total: $totalStartupCount). Desative lançadores desnecessários para acelerar o boot e liberar RAM."
     } else {
-        Set-BadgeColor $BadgeStartup $TxtBadgeStartup "$startupCount APPS (LEVE)" "success"
-        $TxtDescStartup.Text = "Poucos aplicativos iniciando com o sistema. O boot e os recursos em repouso estão preservados."
+        Set-BadgeColor $BadgeStartup $TxtBadgeStartup "$enabledCount HABILITADOS ($disabledCount DESATIVADOS)" "success"
+        $TxtDescStartup.Text = "Excelente! $enabledCount aplicativos habilitados e $disabledCount desabilitados no boot (Total: $totalStartupCount). Inicialização rápida e consumo mínimo de memória em repouso."
     }
 
     # 11. Monitor Refresh Rate (Hz) & Resolution Check
@@ -1785,12 +1870,13 @@ $BtnAtivarPower.Add_Click({
         }
         if ($guid) {
             powercfg /setactive $guid
-            [System.Windows.MessageBox]::Show("Plano de Desempenho Máximo ativado com sucesso!", "Sucesso", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+            Run-AuditScan
+            Ask-RestartPrompt "Plano de Desempenho Máximo ativado com sucesso!"
         } else {
             powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
-            [System.Windows.MessageBox]::Show("Plano de Alto Desempenho ativado com sucesso!", "Sucesso", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+            Run-AuditScan
+            Ask-RestartPrompt "Plano de Alto Desempenho ativado com sucesso!"
         }
-        Run-AuditScan
     } catch {
         [System.Windows.MessageBox]::Show("Erro ao alterar plano de energia: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
     }
@@ -1835,13 +1921,34 @@ $BtnLimparTudo.Add_Click({
             }
         }
         $freedGB = [math]::Round(($freed / 1GB), 2)
-        [System.Windows.MessageBox]::Show("Limpeza concluída! Foram liberados $freedGB GB de espaço no seu SSD.", "Limpeza Concluída", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
         Run-AuditScan
+        Ask-RestartPrompt "Limpeza concluída! Foram liberados $freedGB GB de espaço no SSD (caches de shaders e arquivos temporários eliminados)."
     }
 })
 
-# Button: Abrir Inicialização do Windows
+# Button: Abrir Inicialização do Windows & Listar Programas
 $BtnGerenciadorTarefas.Add_Click({
+    $st = $global:DiagnosticState.Startup
+    $enabledItems = $st.Items | Where-Object { $_.Status -eq "Enabled" }
+    $disabledItems = $st.Items | Where-Object { $_.Status -eq "Disabled" }
+
+    $enabledList = if ($enabledItems) { ($enabledItems | ForEach-Object { "  • $($_.Name)" }) -join "`n" } else { "  (Nenhum aplicativo habilitado)" }
+    $disabledList = if ($disabledItems) { ($disabledItems | ForEach-Object { "  • $($_.Name)" }) -join "`n" } else { "  (Nenhum aplicativo desabilitado)" }
+
+    [System.Windows.MessageBox]::Show(
+@"
+=== APLICATIVOS NA INICIALIZAÇÃO DO WINDOWS ===
+Total Detectado: $($st.Total) programas
+
+🟢 HABILITADOS NO BOOT ($($st.Enabled)):
+$enabledList
+
+🔴 DESABILITADOS ($($st.Disabled)):
+$disabledList
+
+Clique em OK para abrir a aba de Inicialização do Gerenciador de Tarefas do Windows e ajustar o que desejar.
+"@, "Resumo de Inicialização do Sistema", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+
     Start-Process "taskmgr.exe"
 })
 
@@ -1861,13 +1968,8 @@ $BtnMouseFix.Add_Click({
         Set-ItemProperty -Path 'HKCU:\Control Panel\Mouse' -Name 'MouseSpeed' -Value "0"
         Set-ItemProperty -Path 'HKCU:\Control Panel\Mouse' -Name 'MouseThreshold1' -Value "0"
         Set-ItemProperty -Path 'HKCU:\Control Panel\Mouse' -Name 'MouseThreshold2' -Value "0"
-        [System.Windows.MessageBox]::Show(
-            "Aceleração do mouse ('Aprimorar precisão do ponteiro') desativada com sucesso!`n`nSua mira agora está em escala 1:1 nativa (raw input).`nNota: Pode ser necessário reiniciar ou fazer logoff para alguns jogos lerem a nova sensibilidade.",
-            "Mira 1:1 Calibrada",
-            [System.Windows.MessageBoxButton]::OK,
-            [System.Windows.MessageBoxImage]::Information
-        )
         Run-AuditScan
+        Ask-RestartPrompt "Aceleração do mouse ('Aprimorar precisão do ponteiro') desativada com sucesso!`n`nSua mira agora está em escala 1:1 nativa (raw input)."
     } catch {
         [System.Windows.MessageBox]::Show("Erro ao alterar configurações do mouse: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
     }
@@ -1878,13 +1980,8 @@ $BtnFixVgc.Add_Click({
     try {
         & sc.exe config vgc start= auto | Out-Null
         Start-Service -Name "vgc" -ErrorAction SilentlyContinue
-        [System.Windows.MessageBox]::Show(
-            "O serviço Riot Vanguard (vgc) foi configurado para Inicialização Automática com sucesso!`n`nIsso corrige e previne desconexões e os erros VAN 1067 e VAN 84 no Valorant e LoL.",
-            "Riot Vanguard Configurado",
-            [System.Windows.MessageBoxButton]::OK,
-            [System.Windows.MessageBoxImage]::Information
-        )
         Run-AuditScan
+        Ask-RestartPrompt "O serviço Riot Vanguard (vgc) foi configurado para Inicialização Automática com sucesso!`n`nIsso previne desconexões e os erros VAN 1067 e VAN 84 no Valorant e LoL."
     } catch {
         [System.Windows.MessageBox]::Show("Erro ao configurar serviço vgc: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
     }
@@ -1895,13 +1992,8 @@ $BtnFixIntegrity.Add_Click({
     try {
         & bcdedit /set testsigning off | Out-Null
         & bcdedit /set nointegritychecks off | Out-Null
-        [System.Windows.MessageBox]::Show(
-            "O modo de testes de drivers não assinados (Testsigning) e verificações de integridade foram corrigidos com sucesso!`n`nSerá necessário REINICIAR o computador para que o Windows aplique as alterações do boot e o Vanguard inicialize sem o erro VAN 128 / VAN 57.",
-            "Integridade do Boot Corrigida",
-            [System.Windows.MessageBoxButton]::OK,
-            [System.Windows.MessageBoxImage]::Information
-        )
         Run-AuditScan
+        Ask-RestartPrompt "O modo de testes de drivers não assinados (Testsigning) e as verificações de integridade foram corrigidos com sucesso!`n`n(Nota: As configurações do BCD entram em vigor após o reinício)."
     } catch {
         [System.Windows.MessageBox]::Show("Erro ao alterar configurações do BCD: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
     }
@@ -1973,13 +2065,8 @@ $BtnFixNagle.Add_Click({
         $tcpPath = "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\$($adapter.SettingID)"
         Set-ItemProperty -Path $tcpPath -Name "TcpAckFrequency" -Value 1 -Type DWord
         Set-ItemProperty -Path $tcpPath -Name "TCPNoDelay" -Value 1 -Type DWord
-        [System.Windows.MessageBox]::Show(
-            "Algoritmo de Nagle desativado com sucesso para '$($adapter.Description)'!`n`n• TcpAckFrequency = 1 (Confirmação imediata sem espera)`n• TCPNoDelay = 1 (Envio imediato sem agrupamento de pacotes)`n`nSeus disparos e ações em jogos online competitivos agora têm transmissão direta sem micro-atrasos.",
-            "Latência TCP Otimizada",
-            [System.Windows.MessageBoxButton]::OK,
-            [System.Windows.MessageBoxImage]::Information
-        )
         Run-AuditScan
+        Ask-RestartPrompt "Algoritmo de Nagle desativado com sucesso para '$($adapter.Description)'!`n`n• TcpAckFrequency = 1 (Confirmação imediata sem espera)`n• TCPNoDelay = 1 (Envio imediato sem agrupamento de pacotes)`n`nSeus disparos e ações em jogos agora são transmitidos sem latência de buffer."
     } catch {
         [System.Windows.MessageBox]::Show("Erro ao configurar parâmetros TCP: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
     }
@@ -1991,13 +2078,8 @@ $BtnFixThrottling.Add_Click({
         $profilePath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile"
         Set-ItemProperty -Path $profilePath -Name "NetworkThrottlingIndex" -Value 0xFFFFFFFF -Type DWord
         Set-ItemProperty -Path $profilePath -Name "SystemResponsiveness" -Value 0 -Type DWord
-        [System.Windows.MessageBox]::Show(
-            "Throttling de rede do Windows desativado com sucesso!`n`n• NetworkThrottlingIndex = Desativado (Fluxo de rede 100% livre)`n• SystemResponsiveness = 0 (Prioridade total para jogos em primeiro plano)`n`nIsso previne gargalos de pacotes e melhora a consistência da taxa de dados.",
-            "Tráfego de Rede Liberado",
-            [System.Windows.MessageBoxButton]::OK,
-            [System.Windows.MessageBoxImage]::Information
-        )
         Run-AuditScan
+        Ask-RestartPrompt "Throttling de rede do Windows desativado com sucesso!`n`n• NetworkThrottlingIndex = Desativado (Fluxo de rede 100% livre)`n• SystemResponsiveness = 0 (Prioridade total para jogos em primeiro plano)`n`nIsso previne gargalos de pacotes e melhora a consistência da taxa de dados."
     } catch {
         [System.Windows.MessageBox]::Show("Erro ao configurar parâmetros do SystemProfile: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
     }
@@ -2016,13 +2098,8 @@ $BtnApplyCloudflareDns.Add_Click({
             netsh interface ipv4 add dnsservers name="$($netConn.NetConnectionID)" 1.0.0.1 index=2 | Out-Null
         }
         ipconfig /flushdns | Out-Null
-        [System.Windows.MessageBox]::Show(
-            "DNS Cloudflare Gamer aplicado com sucesso!`n`n• DNS Primário: 1.1.1.1`n• DNS Secundário: 1.0.0.1`n• Cache DNS limpo (Flush DNS realizado).`n`nRotas mais rápidas e menor ping em servidores de jogos.",
-            "DNS Cloudflare Ativo",
-            [System.Windows.MessageBoxButton]::OK,
-            [System.Windows.MessageBoxImage]::Information
-        )
         Run-AuditScan
+        Ask-RestartPrompt "DNS Cloudflare Gamer aplicado com sucesso!`n`n• DNS Primário: 1.1.1.1`n• DNS Secundário: 1.0.0.1`n• Cache DNS limpo (Flush DNS realizado).`n`nRotas mais rápidas e menor ping em servidores de jogos."
     } catch {
         [System.Windows.MessageBox]::Show("Erro ao aplicar DNS Cloudflare: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
     }
@@ -2041,13 +2118,8 @@ $BtnApplyGoogleDns.Add_Click({
             netsh interface ipv4 add dnsservers name="$($netConn.NetConnectionID)" 8.8.4.4 index=2 | Out-Null
         }
         ipconfig /flushdns | Out-Null
-        [System.Windows.MessageBox]::Show(
-            "DNS Google Gamer aplicado com sucesso!`n`n• DNS Primário: 8.8.8.8`n• DNS Secundário: 8.8.4.4`n• Cache DNS limpo (Flush DNS realizado).`n`nExcelente estabilidade e tempo de resolução global.",
-            "DNS Google Ativo",
-            [System.Windows.MessageBoxButton]::OK,
-            [System.Windows.MessageBoxImage]::Information
-        )
         Run-AuditScan
+        Ask-RestartPrompt "DNS Google Gamer aplicado com sucesso!`n`n• DNS Primário: 8.8.8.8`n• DNS Secundário: 8.8.4.4`n• Cache DNS limpo (Flush DNS realizado).`n`nExcelente estabilidade e tempo de resolução global."
     } catch {
         [System.Windows.MessageBox]::Show("Erro ao aplicar DNS Google: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
     }
@@ -2065,13 +2137,8 @@ $BtnApplyDhcpDns.Add_Click({
             netsh interface ipv4 set dnsservers name="$($netConn.NetConnectionID)" source=dhcp | Out-Null
         }
         ipconfig /flushdns | Out-Null
-        [System.Windows.MessageBox]::Show(
-            "Configuração de DNS restaurada para Automático (DHCP da operadora / roteador)!`n`nCache DNS renovado com sucesso.",
-            "DNS DHCP Restaurado",
-            [System.Windows.MessageBoxButton]::OK,
-            [System.Windows.MessageBoxImage]::Information
-        )
         Run-AuditScan
+        Ask-RestartPrompt "Configuração de DNS restaurada para Automático (DHCP da operadora / roteador)!`n`nCache DNS renovado com sucesso."
     } catch {
         [System.Windows.MessageBox]::Show("Erro ao restaurar DNS DHCP: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
     }
@@ -2122,12 +2189,7 @@ $BtnFlushDns.Add_Click({
         ipconfig /flushdns | Out-Null
         ipconfig /registerdns | Out-Null
         netsh winsock reset | Out-Null
-        [System.Windows.MessageBox]::Show(
-            "Limpeza de Rede Concluída com Sucesso!`n`n• Cache de resolução DNS foi esvaziado (Flush DNS)`n• Tabela de registro DNS renovada`n• Pilha Winsock resetada para o padrão limpo`n`nIsso resolve instabilidades de rota e engasgos de conexão em partidas.",
-            "Rede e DNS Limpos",
-            [System.Windows.MessageBoxButton]::OK,
-            [System.Windows.MessageBoxImage]::Information
-        )
+        Ask-RestartPrompt "Limpeza de Rede Concluída com Sucesso!`n`n• Cache de resolução DNS foi esvaziado (Flush DNS)`n• Tabela de registro DNS renovada`n• Pilha Winsock resetada para o padrão limpo`n`n(Nota: A redefinição de catálogo Winsock entra em vigor após reiniciar)."
     } catch {
         [System.Windows.MessageBox]::Show("Erro ao limpar cache de rede: $_", "Erro", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
     }
@@ -2283,6 +2345,11 @@ $BtnLaudo.Add_Click({
                 <td><b>Modo de Jogo &amp; Precisão do Mouse</b></td>
                 <td><span class="badge $(if ($diag.GameMode -and $diag.MouseAccelOff) { 'badge-success' } else { 'badge-warning' })">$(if ($diag.GameMode -and $diag.MouseAccelOff) { 'Otimizado' } else { 'Pendente' })</span></td>
                 <td>Modo de Jogo: $gameModeStatus | Aceleração: $mouseStatus</td>
+            </tr>
+            <tr>
+                <td><b>Aplicativos na Inicialização</b></td>
+                <td><span class="badge $(if ($diag.Startup.Enabled -le 7) { 'badge-success' } else { 'badge-warning' })">$($diag.Startup.Enabled) Habilitados</span></td>
+                <td>$($diag.Startup.Enabled) programas ativos no boot e $($diag.Startup.Disabled) desabilitados (Total: $($diag.Startup.Total)).</td>
             </tr>
         </table>
 
